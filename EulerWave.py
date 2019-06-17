@@ -120,7 +120,7 @@ class Check_Formula(CheckFormulaByTXT):
                             r"$\theta$",
                             "increases with time",
                             #"time",
-                            #"increases", 								#START HEREEEEEEEEEEEEEEEEE
+                            #"increases", 								
                             #r"$\theta$",
                             #"increases",
                             #r"$\newline$",
@@ -244,8 +244,7 @@ class Graph(GraphScene):
         def update_point(complex_point, dt):
             new_point = complex_point.move_to(complex_r.points[-1])
             complex_point.become(new_point)
-
-
+            
         complex_point.add_updater(update_point)
         complex_theta.add_updater(update_theta)
 
@@ -347,16 +346,11 @@ class IntroToSpinnning(GraphScene):
         z_label.add_updater(lambda x:x.next_to(z))
         theta_var = DecimalNumber(z_r.get_angle(),show_ellipsis=False, include_sign = False).next_to(theta)
         theta_var.scale(.75)
-
         self.play(ShowCreation(z), ShowCreation(z_r),ShowCreation(z_label))
         z_r.add_updater(lambda x:x.put_start_and_end_on(self.graph_origin, z.get_center()))
-
         self.play(ApplyMethod(z.move_to,self.coords_to_point(2,4)))
         self.play(ShowCreation(z_theta),ShowCreation(theta))
         self.add(theta_var)
-
-
-
         z_theta.add_updater(update_theta)
         theta_var.add_updater(lambda x: x.set_value(z_r.get_angle()*(180/PI)))
         z.add_updater(lambda x:x.move_to(z_r.points[-1]))
@@ -450,9 +444,6 @@ class Spin(GraphScene):
         z2_label= TexMobject("z_2 = - {e}^{i (-\\theta)}", color=self.color_b).move_to(z2.get_center()+LEFT*1.5)
 
         z1_sublabel=TexMobject("z_1 = {e}^{i \\theta}", color=self.color_a).next_to(z1)
-
-
-
         self.play(ReplacementTransform(z1_shadow_label,z2_label))
         self.play(ReplacementTransform(z1_label, z1_sublabel))
         self.play( ApplyMethod(z2.move_to, self.coords_to_point(-1.5,1.5)),ApplyMethod(z1.move_to, self.coords_to_point(1.5,1.5)))
@@ -480,9 +471,6 @@ class Stroboscope(Scene):
     }
 
     def construct(self):
-    
-
-
         total_time = 10
         flash_rect = FullScreenRectangle(stroke_width=0,fill_color=WHITE,fill_opacity=0.2,)
         flash=FadeOut(
@@ -582,12 +570,6 @@ class Stroboscope(Scene):
         z2_label.scale(.5)
         z_sum=Line(circle.get_center(), dot.get_center()+UP,color=YELLOW)
 
-
-
-          
-
-
-
         self.play(
             ShowCreation(circle),
             ShowCreation(line_1),
@@ -673,12 +655,6 @@ class Stroboscope(Scene):
         line_2.add_updater(update_line_2)
         subline_1.add_updater(update_subline_1)
         subline_2.add_updater(update_subline_2)
-
-
-       
-
-
-
 
         self.add(dot)
         for t1, t2 in zip(times, times[1:]):
