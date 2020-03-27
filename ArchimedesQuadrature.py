@@ -266,7 +266,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             child_triangle = get_triangle([P1_point, P2_point, P_point], fill_color=GREEN, **self.fill_triangle_kwargs)
             parents.add(parent_triangle)
             children.add(child_triangle)
-
+            # checkwork
             self.play(FadeIn(parent_triangle))
             self.play(FadeIn(child_triangle))
             # parent_copy = parent_triangle.copy()
