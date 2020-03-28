@@ -462,7 +462,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             # Flash(final_answer)
         )
         self.wait(2)
-
+        #checking working
         # self.play()
         # for i in range(2):
 
