@@ -130,6 +130,15 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             self.wait()
             self.play(*[FadeOut(i) for i in [equals, equals_copy, line1, line2]])
 
+        def are_similar(tri1, tri2, f=True):
+            similar_triangle1 = get_triangle(tri1, fill_color=PURPLE, **self.fill_triangle_kwargs)
+            similar_triangle2 = get_triangle(tri2, fill_color=PURPLE, **self.fill_triangle_kwargs)
+            self.play(Write(similar_triangle2))
+            self.play(ReplacementTransform(similar_triangle2, similar_triangle1))
+            if f:
+                self.play(FadeOut(similar_triangle1))
+            return similar_triangle1
+
         for x in range(1):
             if x == 1:
                 self.play(FadeIn(parabola_left))
@@ -251,10 +260,11 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(FadeIn(L))
                 # self.play(*[Write(i) for i in [AL_line, QL_line]])
                 are_equal(AL_line, QL_line)
-                similar_triangle1 = get_triangle([A_point, L_point, P1_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
-                similar_triangle2 = get_triangle([A_point, P_point, Q_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
-                self.play(Write(similar_triangle2))
-                self.play(ReplacementTransform(similar_triangle2, similar_triangle1))
+                similar_triangle1 = are_similar([A_point, L_point, P1_point], [A_point, P_point, Q_point], f=False)
+                # similar_triangle1 = get_triangle([A_point, L_point, P1_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
+                # similar_triangle2 = get_triangle([A_point, P_point, Q_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
+                # self.play(Write(similar_triangle2))
+                # self.play(ReplacementTransform(similar_triangle2, similar_triangle1))
                 AP1_line = Line(P1_point, A_point, color=GREEN, **self.line_kwargs)
                 PP1_line = Line(P1_point, P_point, color=GREEN, **self.line_kwargs)
                 are_equal(AP1_line, PP1_line)
@@ -262,6 +272,11 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 BP2_line = Line(P2_point, B_point, color=GREEN, **self.line_kwargs)
                 PP2_line = Line(P2_point, P_point, color=GREEN, **self.line_kwargs)
                 are_equal(BP2_line, PP2_line)
+
+                MQ_line = Line(M_point, Q_point, color=GREEN, **self.line_kwargs)
+                PQ_line = Line(P_point, Q_point, color=GREEN, **self.line_kwargs)
+                are_equal(MQ_line, PQ_line)
+                are_similar([M_point, B_point, Q_point, ], [Q_point, P2_point, P_point, ])
                 self.wait(2)
 
             """
