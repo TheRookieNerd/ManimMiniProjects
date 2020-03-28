@@ -340,7 +340,6 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             #     labels[i].scale(.5).next_to(j, direction=UR, buff=.02)
             #     self.remove(labels[i])
 
-        """
         self.play(self.camera_frame.restore)
         for o in linesGroup:
             self.play(o.restore)
@@ -479,7 +478,6 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
         #     PM_line = Line(P_point, M_point, color=RED)
 
         # first_set = VGroup(labels, tangent_1, tangent_2)
-        """
 
 
 """
