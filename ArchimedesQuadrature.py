@@ -258,7 +258,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 AP1_line = Line(P1_point, A_point, color=GREEN, **self.line_kwargs)
                 PP1_line = Line(P1_point, P_point, color=GREEN, **self.line_kwargs)
                 are_equal(AP1_line, PP1_line)
-                self.play(FadeOut(similar_triangle1), FadeOut(tempvertical), FadeOut(L))
+                self.play(*[FadeOut(i) for i in [similar_triangle1, tempvertical, L, AL_line, QL_line]])
 
                 self.wait(2)
 
@@ -340,6 +340,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             #     labels[i].scale(.5).next_to(j, direction=UR, buff=.02)
             #     self.remove(labels[i])
 
+        """
         self.play(self.camera_frame.restore)
         for o in linesGroup:
             self.play(o.restore)
@@ -478,6 +479,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
         #     PM_line = Line(P_point, M_point, color=RED)
 
         # first_set = VGroup(labels, tangent_1, tangent_2)
+        """
 
 
 """
