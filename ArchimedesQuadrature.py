@@ -47,8 +47,8 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
 
     def construct(self):
         # ctp = self.coords_to_point
-        self.setup_axes()
         self.camera_frame.scale(.55)
+        self.setup_axes(animate=True)
         parabola = self.get_graph(
             lambda x: x**2,
             x_min=self.x_min,
@@ -73,7 +73,8 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             stroke_width=5
         )
 
-        self.play(ShowCreation(parabola))
+        self.play(ShowCreation(parabola), run_time=2)
+        self.wait()
         self.play(
             self.x_axis.fade, 1,
             self.y_axis.fade, 1,
@@ -133,7 +134,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             new_area_points.append(temp_A.get_center())
             new_area.set_points_as_corners(new_area_points)
             area.become(new_area)
-
+        """
         self.play(
             *[FadeIn(i) for i in [temp_A, temp_B]],
             *[Write(j) for j in [temp_chord]]#, temp_A_tang, temp_B_tang]]
@@ -177,7 +178,9 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             ReplacementTransform(temp_B_tang, trim_tang_B),
             ReplacementTransform(temp_A_tang, trim_tang_A)
             )
+        self.wait(2)
         self.play(FadeIn(ffs[0]))
+        self.wait()
         self.play(Write(badcode))
         self.play(FadeOut(area), run_time=2)
         self.play(FadeIn(temp_arch_tri_copy), FadeIn(temp_arch_tri))
@@ -233,7 +236,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(FadeOut(similar_triangle1))
             return similar_triangle1
 
-        for x in range(3):
+        for x in range(1):
             if x == 1:
                 self.play(FadeIn(parabola_left))
             if x == 2:
@@ -265,21 +268,6 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
 
             Q_point = self.input_to_graph_point(P_point_GR[0], parabola)
             Q = Dot(Q_point, **self.dot_kwargs)
-
-            if x == 0:
-                archimedes_triangle = get_triangle([A_point, B_point, P_point, A_point], color=YELLOW)
-
-                question = VMobject(fill_color=YELLOW, fill_opacity=.5, stroke_width=0)
-                question_points = [self.input_to_graph_point(i, parabola) for i in np.arange(B_point[0], A_point[0], 0.1)]
-                question_points.append(A_point)
-                question.set_points_as_corners(question_points)
-                self.play(ShowCreation(A), ShowCreation(B))
-                self.play(ShowCreation(chord))
-                self.play(Write(archimedes_triangle))
-
-                self.play(ShowCreation(question))
-                self.play(FadeOut(question), FadeOut(archimedes_triangle))
-
             AQ_line, BQ_line = Line(A_point, Q_point, color=YELLOW, **self.line_kwargs), Line(B_point, Q_point, color=YELLOW, **self.line_kwargs)
             vertex_tangent = get_tangent(Q_point[0])
             vertex_tangent.move_to(Q_point)
@@ -326,7 +314,21 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(ShowCreation(chord))
 
             if x == 0:
-                self.play(Write(labels[0]), Write(labels[1]))
+                archimedes_triangle = get_triangle([A_point, B_point, P_point, A_point], color=YELLOW)
+                question = VMobject(fill_color=YELLOW, fill_opacity=.5, stroke_width=0)
+                question_points = [self.input_to_graph_point(i, parabola) for i in np.arange(B_point[0], A_point[0], 0.1)]
+                question_points.append(A_point)
+                question.set_points_as_corners(question_points)
+
+                self.play(ShowCreation(A), ShowCreation(B))
+                self.play(Write(chord))
+                self.play(Write(labels[0]), Write(labels[1]) , run_time=2)
+                # self.play(Write(archimedes_triangle))
+
+                self.play(FadeIn(question), run_time=2)
+                self.wait(2)
+                self.play(FadeOut(question))#, FadeOut(archimedes_triangle))
+
             self.play(ShowCreation(tangent_1), ShowCreation(tangent_2))
             # self.add(P)
             # self.add(chord)
@@ -341,9 +343,10 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             self.play(ShowCreation(M), ShowCreation(Q))
             if x == 0:
                 self.play(Write(labels[3]), Write(labels[4]))
+                self.wait(2)
             if x == 0:
                 are_equal(AM_line, BM_line)
-
+                self.wait()
             self.play(ShowCreation(vertex_tangent))
             self.play(ShowCreation(A1), ShowCreation(B1))
             if x == 0:
@@ -353,22 +356,28 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
 
             if x == 0:
                 self.play(parabola.fade, .75)
-                self.play(FadeIn(parabola_right))
+                self.wait()
+                self.play(FadeIn(parabola_right), run_time=2)
+                self.wait(2)
                 tempvertical = Line(A1_point, np.array([A1_point[0], 1, 0]), color=RED, **self.line_kwargs).scale(3)
                 L_point = get_intersection_point(tempvertical, AQ_line)
                 L = Dot(L_point, **self.dot_kwargs).scale(.75)
+                L_label = TextMobject("L").scale(.5).next_to(L, direction=UR, buff=.02)
                 AL_line = Line(L_point, A_point, color=YELLOW, **self.line_kwargs)
                 QL_line = Line(L_point, Q_point, color=YELLOW, **self.line_kwargs)
 
                 self.play(Write(tempvertical))
                 self.play(FadeIn(L))
+                self.play(Write(L_label)))
+
+                #==============================Done till here============================================
                 # self.play(*[Write(i) for i in [AL_line, QL_line]])
                 are_equal(AL_line, QL_line)
                 similar_triangle1 = are_similar([A_point, L_point, A1_point], [A_point, P_point, Q_point], f=False)
                 AA1_line = Line(A1_point, A_point, color=GREEN, **self.line_kwargs)
                 PA1_line = Line(A1_point, P_point, color=GREEN, **self.line_kwargs)
                 are_equal(AA1_line, PA1_line)
-                self.play(*[FadeOut(i) for i in [similar_triangle1, tempvertical, L, AL_line, QL_line]])
+                self.play(*[FadeOut(i) for i in [similar_triangle1, tempvertical, L, L_label, AL_line, QL_line]])
                 self.play(FadeOut(parabola_right))
                 self.play(parabola.restore)
                 BB1_line = Line(B1_point, B_point, color=GREEN, **self.line_kwargs)
@@ -415,6 +424,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 proof = TexMobject("\\Delta (AQB) =", " 2 \\times \\Delta(A1\\,P\\,B1)").scale(.5).move_to(tri_textgrp)
                 self.wait(2)
 
+            """
             parent_triangle = get_triangle([A_point, B_point, Q_point], fill_color=YELLOW, **self.fill_triangle_kwargs)
             child_triangle = get_triangle([A1_point, B1_point, P_point], fill_color=GREEN, **self.fill_triangle_kwargs)
             parents.add(parent_triangle)
