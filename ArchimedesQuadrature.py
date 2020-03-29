@@ -95,8 +95,8 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             endpoints1, endpoints2 = np.array([line1.points[0], line1.points[-1]]), np.array([line2.points[0], line2.points[-1]])
             return line_intersection(endpoints1, endpoints2)
 
-        PGroup, AGroup, BGroup, MGroup, QGroup, P1Group, P2Group = [VGroup() for i in range(7)]
-        loopGroup = VGroup(PGroup, AGroup, BGroup, MGroup, QGroup, P1Group, P2Group)
+        PGroup, AGroup, BGroup, MGroup, QGroup, A1Group, B1Group = [VGroup() for i in range(7)]
+        loopGroup = VGroup(PGroup, AGroup, BGroup, MGroup, QGroup, A1Group, B1Group)
         linesGroup, parents, children = [VGroup() for i in range(3)]
         self.camera_frame.save_state()
 
@@ -199,33 +199,33 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             M = Dot(M_point, **self.dot_kwargs)
             PM_line = Line(P_point, M_point, color=RED, **self.line_kwargs)
 
-            P1_point, P2_point = get_intersection_point(vertex_tangent, tangent_1), get_intersection_point(vertex_tangent, tangent_2)
-            P1, P2 = Dot(P1_point, **self.dot_kwargs), Dot(P2_point, **self.dot_kwargs)
+            A1_point, B1_point = get_intersection_point(vertex_tangent, tangent_1), get_intersection_point(vertex_tangent, tangent_2)
+            A1, B1 = Dot(A1_point, **self.dot_kwargs), Dot(B1_point, **self.dot_kwargs)
             if x == 0:
                 permanent_P_point = P_point
                 permanent_A_point = A_point
                 permanent_B_point = B_point
-                permanent_P1_point = P1_point
-                permanent_P2_point = P2_point
+                permanent_A1_point = A1_point
+                permanent_B1_point = B1_point
 
-            dots = VGroup(P, A, B, M, Q, P1, P2)
+            dots = VGroup(P, A, B, M, Q, A1, B1)
             for l, m in zip(dots, loopGroup):
                 m.add(l)
 
-            for y in [A, B, P, Q, M, P1, P2]:
+            for y in [A, B, P, Q, M, A1, B1]:
                 if x != 0:
                     if y != A and y != B:
                         y.scale(.5)
                 else:
                     y.scale(.75)
 
-            labels = TextMobject("A", "B", "P", "M", "Q", "P1", "P2")
-            for i, j in zip(list(range(7)), [A, B, P, M, Q, P1, P2]):
-                labels[i].scale(.5).next_to(j, direction=UR, buff=.02)
-                self.add(labels[i])
+            labels = TextMobject("A", "B", "P", "M", "Q", "A1", "B1")
+            for i, j, k in zip(range(7), [A, B, P, M, Q, A1, B1], [DR, UR, DOWN, UP, UR, DR, DL]):
+                labels[i].scale(.5).next_to(j, direction=k, buff=.02)
+                # self.add(labels[i])
 
             trimmed_tangent_1, trimmed_tangent_2 = Line(A_point, P_point, color=GREEN, **self.line_kwargs), Line(B_point, P_point, color=GREEN, **self.line_kwargs)
-            trimmed_vertex_tangent = Line(P2_point, P1_point, color=GREEN, **self.line_kwargs)
+            trimmed_vertex_tangent = Line(B1_point, A1_point, color=GREEN, **self.line_kwargs)
             tangents, trimmed_tangents = VGroup(tangent_1, tangent_2, vertex_tangent), VGroup(trimmed_tangent_1, trimmed_tangent_2, trimmed_vertex_tangent)
             temp_lines_group = VGroup(tangents, trimmed_tangents, PM_line, chord, AQ_line, BQ_line)
             # temp_lines_group.set_stroke(width=.95)
@@ -233,25 +233,35 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             if x != 0:
                 self.play(ShowCreation(A), ShowCreation(B))
                 self.play(ShowCreation(chord))
+
+            if x == 0:
+                self.play(Write(labels[0]), Write(labels[1]))
             self.play(ShowCreation(tangent_1), ShowCreation(tangent_2))
             # self.add(P)
             # self.add(chord)
             # self.add(vertex_tangent)
             # self.add(PM_line)
             # self.add(M, Q)
-            # self.add(P1, P2)
+            # self.add(A1, B1)
             self.play(ShowCreation(P))
+            if x == 0:
+                self.play(Write(labels[2]))
             self.play(ShowCreation(PM_line))
+            self.play(ShowCreation(M), ShowCreation(Q))
+            if x == 0:
+                self.play(Write(labels[3]), Write(labels[4]))
             if x == 0:
                 are_equal(AM_line, BM_line)
+
             self.play(ShowCreation(vertex_tangent))
-            self.play(ShowCreation(M), ShowCreation(Q))
+            self.play(ShowCreation(A1), ShowCreation(B1))
+            if x == 0:
+                self.play(Write(labels[5]), Write(labels[6]))
             self.play(ShowCreation(AQ_line), ShowCreation(BQ_line))
-            self.play(ShowCreation(P1), ShowCreation(P2))
             self.play(*[Transform(i, j) for i, j in zip(tangents, trimmed_tangents)])
 
             if x == 0:
-                tempvertical = Line(P1_point, np.array([P1_point[0], 1, 0]), color=RED, **self.line_kwargs).scale(3)
+                tempvertical = Line(A1_point, np.array([A1_point[0], 1, 0]), color=RED, **self.line_kwargs).scale(3)
                 L_point = get_intersection_point(tempvertical, AQ_line)
                 L = Dot(L_point, **self.dot_kwargs).scale(.75)
                 AL_line = Line(L_point, A_point, color=YELLOW, **self.line_kwargs)
@@ -261,19 +271,19 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(FadeIn(L))
                 # self.play(*[Write(i) for i in [AL_line, QL_line]])
                 are_equal(AL_line, QL_line)
-                similar_triangle1 = are_similar([A_point, L_point, P1_point], [A_point, P_point, Q_point], f=False)
-                AP1_line = Line(P1_point, A_point, color=GREEN, **self.line_kwargs)
-                PP1_line = Line(P1_point, P_point, color=GREEN, **self.line_kwargs)
-                are_equal(AP1_line, PP1_line)
+                similar_triangle1 = are_similar([A_point, L_point, A1_point], [A_point, P_point, Q_point], f=False)
+                AA1_line = Line(A1_point, A_point, color=GREEN, **self.line_kwargs)
+                PA1_line = Line(A1_point, P_point, color=GREEN, **self.line_kwargs)
+                are_equal(AA1_line, PA1_line)
                 self.play(*[FadeOut(i) for i in [similar_triangle1, tempvertical, L, AL_line, QL_line]])
-                BP2_line = Line(P2_point, B_point, color=GREEN, **self.line_kwargs)
-                PP2_line = Line(P2_point, P_point, color=GREEN, **self.line_kwargs)
-                are_equal(BP2_line, PP2_line)
+                BB1_line = Line(B1_point, B_point, color=GREEN, **self.line_kwargs)
+                PB1_line = Line(B1_point, P_point, color=GREEN, **self.line_kwargs)
+                are_equal(BB1_line, PB1_line)
 
                 MQ_line = Line(M_point, Q_point, color=RED, **self.line_kwargs)
                 PQ_line = Line(P_point, Q_point, color=RED, **self.line_kwargs)
                 are_equal(MQ_line, PQ_line)
-                are_similar([M_point, B_point, Q_point, ], [Q_point, P2_point, P_point])
+                are_similar([M_point, B_point, Q_point, ], [Q_point, B1_point, P_point])
                 MP_line = Line(M_point, P_point, color=RED, **self.line_kwargs).save_state()
                 MQ_line_copy = MQ_line.copy().shift(.5 * RIGHT)
                 self.play(ApplyMethod(MP_line.shift, .5 * RIGHT))
@@ -289,8 +299,8 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(ReplacementTransform(sim_tri2, sim_tri1), Write(tri_text[1]))
                 self.play(FadeOut(sim_tri1), tri_text.shift, 2.25 * LEFT + .75 * UP)
 
-                P2P1_line = Line(P2_point, P1_point, color=GREEN, **self.line_kwargs)
-                self.play(TransformFromCopy(chord, P2P1_line))
+                B1A1_line = Line(B1_point, A1_point, color=GREEN, **self.line_kwargs)
+                self.play(TransformFromCopy(chord, B1A1_line))
 
                 PQ_line_copy = PQ_line.copy().shift(.5 * RIGHT)
                 self.play(ApplyMethod(MP_line.shift, .5 * RIGHT))
@@ -298,19 +308,19 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(ReplacementTransform(MP_line, PQ_line))
                 self.remove(MP_line)
 
-                sim_tri1 = get_triangle([P1_point, P2_point, P_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
+                sim_tri1 = get_triangle([A1_point, B1_point, P_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
                 sim_tri2 = get_triangle([A_point, B_point, P_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
-                tri_text1 = TexMobject("\\Delta (APB) =", " 4 \\times \\Delta(P1\\,Q\\,P2)").scale(.5).shift(2 * DOWN)
+                tri_text1 = TexMobject("\\Delta (APB) =", " 4 \\times \\Delta(A1\\,Q\\,B1)").scale(.5).shift(2 * DOWN)
                 self.play(Write(sim_tri2), Write(tri_text1[0]))
                 self.wait(2)
                 self.play(ReplacementTransform(sim_tri2, sim_tri1), Write(tri_text1[1]))
                 self.play(FadeOut(sim_tri1), tri_text1.next_to, tri_text, {"direction": DOWN})
-
+                tri_textgrp = VGroup(tri_text, tri_text1)
+                proof = TexMobject("\\Delta (AQB) =", " 2 \\times \\Delta(A1\\,P\\,B1)").scale(.5).move_to(tri_textgrp)
                 self.wait(2)
 
-            """
             parent_triangle = get_triangle([A_point, B_point, Q_point], fill_color=YELLOW, **self.fill_triangle_kwargs)
-            child_triangle = get_triangle([P1_point, P2_point, P_point], fill_color=GREEN, **self.fill_triangle_kwargs)
+            child_triangle = get_triangle([A1_point, B1_point, P_point], fill_color=GREEN, **self.fill_triangle_kwargs)
             parents.add(parent_triangle)
             children.add(child_triangle)
             # checkwork
@@ -322,7 +332,9 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 parent_copy = timestwo(child_triangle, parent_triangle, q=0.15)
                 # x2.move_to(child_triangle.get_center() + 0.15 * DOWN)
             else:
+                self.play(ReplacementTransform(tri_textgrp, proof))
                 parent_copy = timestwo(child_triangle, parent_triangle)
+                self.play(FadeOut(proof))
                 # x2.move_to(child_triangle.get_center())
             # child_triangle.add(x2)
             # self.play(Write(x2))
@@ -355,7 +367,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             if x == 0:
                 self.play(
                     self.camera_frame.scale, .75,
-                    self.camera_frame.move_to, permanent_P2_point,
+                    self.camera_frame.move_to, permanent_B1_point,
                 )
 
             elif x == 1:
@@ -363,7 +375,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(FadeOut(parabola_left))
                 self.play(
                     self.camera_frame.scale, .75,
-                    self.camera_frame.move_to, permanent_P1_point,
+                    self.camera_frame.move_to, permanent_A1_point,
                 )
             # self.wait(2)
             tangent_line_scale = 7
@@ -383,10 +395,11 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(FadeIn(parabola_copy))
                 # print(f"=========={tgt_point_1}....{tgt_point_2}============")
 
-            # for i, j in zip(list(range(7)), [A, B, P, M, Q, P1, P2]):
+            if x == 0:
+                self.play(FadeOut(labels))
+            # for i, j in zip(list(range(7)), [A, B, P, M, Q, A1, B1]):
             #     labels[i].scale(.5).next_to(j, direction=UR, buff=.02)
             #     self.remove(labels[i])
-            """
 
         """
         self.play(self.camera_frame.restore)
