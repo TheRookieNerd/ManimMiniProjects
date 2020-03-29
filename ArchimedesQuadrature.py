@@ -55,7 +55,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             x_max=self.x_max,
             color=BLUE,
             stroke_width=5
-        )
+        ).save_state()
         parabola_copy = parabola.copy()
 
         parabola_left = self.get_graph(
@@ -78,11 +78,10 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             self.x_axis.fade, 1,
             self.y_axis.fade, 1,
         )
+
         tgt_point_1 = 3
         tgt_point_2 = -3
         tangent_line_scale = 10
-        x2 = TexMobject("\\times 2")
-
         def get_tangent(tgt_point):
             tangent = Line(ORIGIN, RIGHT, color=GREEN, **self.line_kwargs)
             tangent.scale(tangent_line_scale)
@@ -94,6 +93,67 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
         def get_intersection_point(line1, line2):
             endpoints1, endpoints2 = np.array([line1.points[0], line1.points[-1]]), np.array([line2.points[0], line2.points[-1]])
             return line_intersection(endpoints1, endpoints2)
+
+        self.a,self.b =2,-2
+        def tempA_updater(temp_A, dt):
+            self.a+=dt
+            dot = Dot(self.input_to_graph_point(self.a, parabola), **self.dot_kwargs)
+            temp_A.become(dot)
+        def tempB_updater(temp_B, dt):
+            self.b-=dt
+            dotb = Dot(self.input_to_graph_point(self.b, parabola), **self.dot_kwargs)
+            temp_B.become(dotb)
+
+        temp_A_point = self.input_to_graph_point(self.a, parabola)
+        # temp_A_point.add_updater(tempA_updater)
+        temp_B_point = self.input_to_graph_point(self.b, parabola)
+        # temp_B_point.add_updater(tempB_updater)
+        temp_A, temp_B = Dot(temp_A_point, **self.dot_kwargs).save_state(), Dot(temp_B_point, **self.dot_kwargs).save_state()
+        temp_chord = Line(temp_A_point, temp_B_point, color=YELLOW, **self.line_kwargs)
+        temp_chord.add_updater(lambda x:x.put_start_and_end_on(temp_A.get_center(), temp_B.get_center()))
+        def  tang_A_updater(temp_A_tang, dt):
+            new_tang_A = get_tangent(temp_A.get_center()[0]).move_to(temp_A)
+            temp_A_tang.become(new_tang_A)
+
+        def  tang_B_updater(temp_B_tang, dt):
+            new_tang_B = get_tangent(temp_B.get_center()[0]).move_to(temp_B)
+            temp_B_tang.become(new_tang_B)
+
+
+        temp_A_tang = get_tangent(temp_A.get_center()[0]).move_to(temp_A).add_updater(tang_A_updater)
+        temp_B_tang = get_tangent(temp_B.get_center()[0]).move_to(temp_B).add_updater(tang_B_updater)
+        area = VMobject(fill_color=YELLOW, fill_opacity=.5, stroke_width=0)
+        area_points = [self.input_to_graph_point(i, parabola) for i in np.arange(temp_B_point[0], temp_A_point[0], 0.1)]
+        area_points.append(temp_A_point)
+        area.set_points_as_corners(area_points)
+        def area_updater(area, dt):
+            new_area = VMobject(fill_color=YELLOW, fill_opacity=.5, stroke_width=0)
+            new_area_points = [self.input_to_graph_point(i, parabola) for i in np.arange(temp_B.get_center()[0], temp_A.get_center()[0], 0.1)]
+            new_area_points.append(temp_A.get_center())
+            new_area.set_points_as_corners(new_area_points)
+            area.become(new_area)
+
+        self.play(
+            *[FadeIn(i) for i in [temp_A, temp_B]],
+            *[Write(j) for j in [temp_chord]]#, temp_A_tang, temp_B_tang]]
+        )
+        self.play(FadeIn(area))
+        temp_A.add_updater(tempA_updater)
+        area.add_updater(area_updater)
+        self.add(temp_A, temp_B, temp_chord, area)#, temp_A_tang, temp_B_tang)
+        self.wait(1.5)
+        temp_A.clear_updaters()
+        self.play(temp_A.restore)
+        temp_B.add_updater(tempB_updater)
+        self.add(temp_B)
+        self.wait(1.5)
+        temp_B.clear_updaters()
+        self.play(temp_B.restore)
+        initial_exp = VGroup(temp_chord, temp_A, temp_B, area)#, temp_B_tang, temp_A_tang)
+        self.play(FadeOut(initial_exp), run_time=2)
+
+
+        x2 = TexMobject("\\times 2")
 
         PGroup, AGroup, BGroup, MGroup, QGroup, A1Group, B1Group = [VGroup() for i in range(7)]
         loopGroup = VGroup(PGroup, AGroup, BGroup, MGroup, QGroup, A1Group, B1Group)
@@ -130,17 +190,17 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             self.wait()
             self.play(*[FadeOut(i) for i in [equals, equals_copy, line1, line2]])
 
-        def are_similar(tri1, tri2, f=True, w=0):
+        def are_similar(tri1, tri2, f=True):
             similar_triangle1 = get_triangle(tri1, fill_color=PURPLE, **self.fill_triangle_kwargs)
             similar_triangle2 = get_triangle(tri2, fill_color=PURPLE, **self.fill_triangle_kwargs)
             self.play(Write(similar_triangle2))
-            self.wait(w)
+            self.wait(1)
             self.play(ReplacementTransform(similar_triangle2, similar_triangle1))
             if f:
                 self.play(FadeOut(similar_triangle1))
             return similar_triangle1
 
-        for x in range(1):
+        for x in range(3):
             if x == 1:
                 self.play(FadeIn(parabola_left))
             if x == 2:
@@ -261,6 +321,8 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             self.play(*[Transform(i, j) for i, j in zip(tangents, trimmed_tangents)])
 
             if x == 0:
+                self.play(parabola.fade, .75)
+                self.play(FadeIn(parabola_right))
                 tempvertical = Line(A1_point, np.array([A1_point[0], 1, 0]), color=RED, **self.line_kwargs).scale(3)
                 L_point = get_intersection_point(tempvertical, AQ_line)
                 L = Dot(L_point, **self.dot_kwargs).scale(.75)
@@ -276,14 +338,17 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 PA1_line = Line(A1_point, P_point, color=GREEN, **self.line_kwargs)
                 are_equal(AA1_line, PA1_line)
                 self.play(*[FadeOut(i) for i in [similar_triangle1, tempvertical, L, AL_line, QL_line]])
+                self.play(FadeOut(parabola_right))
+                self.play(parabola.restore)
                 BB1_line = Line(B1_point, B_point, color=GREEN, **self.line_kwargs)
                 PB1_line = Line(B1_point, P_point, color=GREEN, **self.line_kwargs)
                 are_equal(BB1_line, PB1_line)
 
                 MQ_line = Line(M_point, Q_point, color=RED, **self.line_kwargs)
                 PQ_line = Line(P_point, Q_point, color=RED, **self.line_kwargs)
-                are_equal(MQ_line, PQ_line)
+
                 are_similar([M_point, B_point, Q_point, ], [Q_point, B1_point, P_point])
+                are_equal(MQ_line, PQ_line)
                 MP_line = Line(M_point, P_point, color=RED, **self.line_kwargs).save_state()
                 MQ_line_copy = MQ_line.copy().shift(.5 * RIGHT)
                 self.play(ApplyMethod(MP_line.shift, .5 * RIGHT))
@@ -364,7 +429,10 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 parabola.fade, .5
             )
 
+
+
             if x == 0:
+                self.play(FadeOut(labels))
                 self.play(
                     self.camera_frame.scale, .75,
                     self.camera_frame.move_to, permanent_B1_point,
@@ -395,13 +463,11 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(FadeIn(parabola_copy))
                 # print(f"=========={tgt_point_1}....{tgt_point_2}============")
 
-            if x == 0:
-                self.play(FadeOut(labels))
             # for i, j in zip(list(range(7)), [A, B, P, M, Q, A1, B1]):
             #     labels[i].scale(.5).next_to(j, direction=UR, buff=.02)
             #     self.remove(labels[i])
 
-        """
+
         self.play(self.camera_frame.restore)
         for o in linesGroup:
             self.play(o.restore)
@@ -540,7 +606,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
         #     PM_line = Line(P_point, M_point, color=RED)
 
         # first_set = VGroup(labels, tangent_1, tangent_2)
-        """
+
 
 
 """
