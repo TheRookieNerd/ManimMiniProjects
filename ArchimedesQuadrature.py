@@ -439,6 +439,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                         self.play(ReplacementTransform(MP_line, PQ_line), run_time=.5)
                         self.remove(MP_line)
                         self.remove(PQ_line_copy)
+                        self.wait()
 
                 A1B1_line = Line(A1_point, B1_point, color=GREEN, **self.line_kwargs)
                 chord_copy = chord.copy()
@@ -450,16 +451,16 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 sim_tri2 = get_triangle([A_point, B_point, P_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
                 tri_text1 = TexMobject("\\Delta (APB) =", " 4 \\times \\Delta(A1\\,P\\,B1)").scale(.5).shift(2 * DOWN)
 
-                self.play(Write(sim_tri2), Write(tri_text1[0]))
+                self.play(Write(sim_tri2), Write(tri_text1[0]), run_time=2)
                 self.wait(2)
-                self.play(ReplacementTransform(sim_tri2, sim_tri1), Write(tri_text1[1]))
+                self.play(ReplacementTransform(sim_tri2, sim_tri1), Write(tri_text1[1]), run_time=2)
                 self.play(FadeOut(sim_tri1), tri_text1.shift, 2.25 * LEFT + .75 * UP)
 
                 MP_line.restore()
                 MQ_line_copy = MQ_line.copy().shift(.5 * RIGHT)
 
                 self.play(ApplyMethod(MP_line.shift, .5 * RIGHT))
-                self.play(ApplyMethod(MP_line.become, MQ_line_copy))
+                self.play(ApplyMethod(MP_line.become, MQ_line_copy), run_time=2)
                 self.play(ReplacementTransform(MP_line, MQ_line))
                 self.remove(MP_line)
 
@@ -467,9 +468,9 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 sim_tri2 = get_triangle([A_point, B_point, P_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
                 tri_text = TexMobject("\\Delta (APB) =", " 2 \\times \\Delta(AQB)").scale(.5).shift(2 * DOWN)
 
-                self.play(Write(sim_tri2), Write(tri_text[0]))
+                self.play(Write(sim_tri2), Write(tri_text[0]), run_time=2)
                 self.wait(2)
-                self.play(ReplacementTransform(sim_tri2, sim_tri1), Write(tri_text[1]))
+                self.play(ReplacementTransform(sim_tri2, sim_tri1), Write(tri_text[1]), run_time=2)
                 self.play(FadeOut(sim_tri1), tri_text.next_to, tri_text1, {"direction": DOWN})
 
                 tri_textgrp = VGroup(tri_text, tri_text1)
@@ -679,7 +680,8 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             run_time=2
         )
         final_answer = VGroup(threesecondsquestion[-1], plus_n_equal[0], plus_n_equal[-1], archimedes_triangle_copy)
-        self.play(Indicate(final_answer))
+        self.wait(2)
+        # self.play(Indicate(final_answer))
         self.play(
             ShowCreationThenFadeAround(final_answer),
             # Flash(final_answer)
