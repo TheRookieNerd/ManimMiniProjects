@@ -137,16 +137,16 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             new_area_points.append(temp_A.get_center())
             new_area.set_points_as_corners(new_area_points)
             area.become(new_area)
-        """
+
         self.play(
             *[FadeIn(i) for i in [temp_A, temp_B]],
-            *[Write(j) for j in [temp_chord]]#, temp_A_tang, temp_B_tang]]
+            *[Write(j) for j in [temp_chord]]  # , temp_A_tang, temp_B_tang]]
         )
         self.play(FadeIn(area))
         temp_A.add_updater(tempA_updater)
         area.add_updater(area_updater)
-        self.add(temp_A, temp_B, temp_chord, area)#, temp_A_tang, temp_B_tang)
-        question_mark = TextMobject("Area=?").move_to(area).shift(UP*.5)
+        self.add(temp_A, temp_B, temp_chord, area)  # , temp_A_tang, temp_B_tang)
+        question_mark = TextMobject("Area=?").move_to(area).shift(UP * .5)
         self.play(Write(question_mark))
         self.wait(1.5)
         temp_A.clear_updaters()
@@ -163,14 +163,14 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
         temp_B_tang = get_tangent(temp_B.get_center()[0]).move_to(temp_B).add_updater(tang_B_updater)
 
         self.play(Write(temp_A_tang), Write(temp_B_tang))
-        temp_arch_tri =VMobject(fill_color=RED, **self.fill_triangle_kwargs)
+        temp_arch_tri = VMobject(fill_color=RED, **self.fill_triangle_kwargs)
         temp_arch_tri.set_points_as_corners([temp_A.get_center(), temp_B.get_center(), get_intersection_point(temp_B_tang, temp_A_tang)])
         temp_arch_tri_copy = temp_arch_tri.copy().scale(.35)
         area_copy = area.copy()
         area_copy.clear_updaters()
         area_copy.scale(.35)
         badcode = TexMobject("= \\,\\dfrac{2}{3} \\times").scale(.5)
-        ffs = VGroup(area_copy, badcode, temp_arch_tri_copy).arrange_submobjects(direction=RIGHT, buff = .1).shift(1*DOWN)
+        ffs = VGroup(area_copy, badcode, temp_arch_tri_copy).arrange_submobjects(direction=RIGHT, buff=.1).shift(1 * DOWN)
         trim_tang_A = Line(temp_A.get_center(), get_intersection_point(temp_B_tang, temp_A_tang), color=GREEN)
         trim_tang_B = Line(temp_B.get_center(), get_intersection_point(temp_B_tang, temp_A_tang), color=GREEN)
 
@@ -180,7 +180,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
         self.play(
             ReplacementTransform(temp_B_tang, trim_tang_B),
             ReplacementTransform(temp_A_tang, trim_tang_A)
-            )
+        )
         self.wait(2)
         self.play(FadeIn(ffs[0]))
         self.wait()
@@ -188,9 +188,9 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
         self.play(FadeOut(area), run_time=2)
         self.play(FadeIn(temp_arch_tri_copy), FadeIn(temp_arch_tri))
         initial_exp = VGroup(temp_chord, temp_A, temp_B, trim_tang_B, trim_tang_A, temp_arch_tri)
-        self.play(FadeOut(initial_exp),FadeOut(ffs),run_time=2)
+        self.play(FadeOut(initial_exp), FadeOut(ffs), run_time=2)
         self.wait()
-        """
+
         tangent_line_scale = 10
         x2 = TexMobject("\\times 2")
 
@@ -231,6 +231,8 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             if f:
                 self.play(*[FadeOut(i) for i in [equals, equals_copy, line1, line2]])
             equal_signs = VGroup(equals, equals_copy)
+            self.remove(mobj1, mobj2)
+
             return equal_signs
 
         def are_similar(tri1, tri2, f=True):
@@ -383,8 +385,9 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
 
                 equal_signs = are_equal(AL_line, QL_line, f=False)
 
-                self.play(Indicate(PQ_line))
-                self.play(Indicate(A1L_line))
+                self.play(WiggleOutThenIn(PQ_line))
+                self.play(WiggleOutThenIn(A1L_line))
+                self.remove(PQ_line)
                 # similar_triangle1 = are_similar([A_point, L_point, A1_point], [A_point, P_point, Q_point], f=False)
                 AA1_line = Line(A1_point, A_point, color=GREEN, **self.line_kwargs)
                 PA1_line = Line(A1_point, P_point, color=GREEN, **self.line_kwargs)
@@ -411,13 +414,14 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(ReplacementTransform(tangent_2_copy, PB1_line_copy))
                 self.play(PB1_line_copy.restore)
                 self.play(FadeOut(PB1_line_copy))
-
+                self.remove(PB1_line_copy, BB1_line)
                 QB1_line = Line(Q_point, B1_point, color=GREEN, **self.line_kwargs)
 
                 self.play(TransformFromCopy(BM_line, QB1_line))
                 self.play(Write(ninety_deg))
                 self.play(FadeOut(ninety_deg), FadeOut(QB1_line))
                 self.wait()
+                self.remove(QB1_line)
 
                 for q in range(2):
                     MP_line = Line(M_point, P_point, color=RED, **self.line_kwargs).save_state()
@@ -434,6 +438,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                         self.play(ApplyMethod(MP_line.become, PQ_line_copy), run_time=.5)
                         self.play(ReplacementTransform(MP_line, PQ_line), run_time=.5)
                         self.remove(MP_line)
+                        self.remove(PQ_line_copy)
 
                 A1B1_line = Line(A1_point, B1_point, color=GREEN, **self.line_kwargs)
                 chord_copy = chord.copy()
@@ -456,6 +461,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
                 self.play(ApplyMethod(MP_line.shift, .5 * RIGHT))
                 self.play(ApplyMethod(MP_line.become, MQ_line_copy))
                 self.play(ReplacementTransform(MP_line, MQ_line))
+                self.remove(MP_line)
 
                 sim_tri1 = get_triangle([A_point, B_point, Q_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
                 sim_tri2 = get_triangle([A_point, B_point, P_point], fill_color=PURPLE, **self.fill_triangle_kwargs)
@@ -504,7 +510,7 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             for n in loopGroup:
                 self.play(FadeOut(n[x]), run_time=.1)
 
-            lines.add(tangents, PM_line, chord, AQ_line, BQ_line)
+            lines = VGroup(tangents, PM_line, chord, chord_copy, AQ_line, BQ_line, MQ_line, PQ_line)
             # for mobj in self.mobjects:
             #     if isinstance(mobj, Line):
             #         lines.add(mobj)
@@ -512,10 +518,12 @@ class ArchimedesQuad(GraphScene, MovingCameraScene):
             lines.save_state()
             linesGroup.add(lines)
             parabola.save_state()
+            self.play(lines.fade, .75,)
+
             self.play(
                 # tangents.fade, .75,
                 # PM_line.fade, .75,
-                lines.fade, .75,
+
                 parabola.fade, .5
             )
 
