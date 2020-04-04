@@ -94,7 +94,7 @@ class Simpsons(GraphScene):
 
                 simps_elements = VGroup(dots, parab_approx, line, parab_area)
                 if make_permanent:
-                    for_later_exp = [self.coords_to_point(simpson_pts[0], 0), self.coords_to_point(simpson_pts[-1], 0)]
+                    for_later_exp = [self.coords_to_point(simpson_pts[0], 0), self.coords_to_point(simpson_pts[1], 0), self.coords_to_point(simpson_pts[-1], 0)]
                     first_iteration = simps_elements
                     mini_par_graph = parab_approx
                     print(for_later_exp)
@@ -117,6 +117,8 @@ class Simpsons(GraphScene):
 
         # first_iteration = iterations[0][0]
         dots = first_iteration[0]
+        x1, x2, x3 = for_later_exp
+        y1, y2, y3 = [dot.get_center() for dot in dots]
         mini_par = VMobject(stroke_width=0, color=YELLOW, fill_opacity=.5)
         pts = []
 
@@ -126,10 +128,10 @@ class Simpsons(GraphScene):
                 pts.append(p)
 
         mini_par_points = [
-            dots[0].get_center(),
+            y1,
             # *[self.input_to_graph_point(a, mini_par_graph) for a in np.arange(0, 4, 1)], # this didn't work for some reason T_T
             *pts,
-            dots[0].get_center()
+            y1
         ]
         dots_copy = dots.copy()
         mini_par.set_points_as_corners(
@@ -138,13 +140,26 @@ class Simpsons(GraphScene):
 
         trap = VMobject(stroke_width=0, color=GREEN, fill_opacity=.5)
         trap.set_points_as_corners(
-            [dots[0].get_center(),
-             dots[2].get_center(),
-             for_later_exp[1], for_later_exp[0],
-             dots[0].get_center()]
+            [y1,
+             y3,
+             x3, x1,
+             y1]
         )
 
-        par_n_dots = first_iteration[::3]
+        x_labels = TexMobject("x_1","x_2","x_3").scale(.75)
+        pseudo_dots = VGroup()
+        for x_label, x_pos in zip(x_labels,for_later_exp):
+            x_label.next_to(x_pos, direction=DOWN)
+            x_point = Dot(radius=.00001).move_to(x_pos)
+            pseudo_dots.add(x_point)
+
+        self.add(x_labels)
+        lines = VGroup(
+            *[DashedLine(dot.get_center(), x_pt, stroke_width=1) for dot, x_pt in zip(dots,for_later_exp)],
+            *[DashedLine(dots[i].get_center(), dots[i+1].get_center(), stroke_width=1) for i in range(3) if i != 2],
+            DashedLine(y1, y3, stroke_width=1)
+            )
+        par_n_dots = VGroup(first_iteration[::3], x_labels, pseudo_dots, lines)
 
         self.play(FadeIn(first_iteration))
         self.play(
@@ -153,6 +168,8 @@ class Simpsons(GraphScene):
             FadeOut(graph),
             * [FadeOut(first_iteration[p]) for p in [1, 2]],
         )
+
+
 
         plus_n_equal = TexMobject("=", "+")
         sum_of_two = VGroup(par_n_dots.copy(), plus_n_equal[0], mini_par, plus_n_equal[1], trap)\
@@ -166,6 +183,7 @@ class Simpsons(GraphScene):
         # self.add(mini_par, trap)
         labels = TexMobject("y_{n-1}", "y_n", "y_{n+1}")
         labels_copy = labels.copy()
+
 
         for label, dot, direction in zip(labels, dots, [UP, UP, UR]):
             label.next_to(dot, direction=direction, buff=.04).scale(.75)
@@ -195,10 +213,49 @@ class Simpsons(GraphScene):
             color=RED,
             fill_opacity=.5
         ).add(numbered_labels_copy)
+
+        tex_scale=.75
         sum_of_two[2].add(archimedes_triangle)
         self.play(Write(archimedes_triangle))
-        four_thirds = TexMobject("\\dfrac{4}{3} \\,\\times").scale(.75)
+        four_thirds = TexMobject("\\dfrac{4}{3} \\,\\times").scale(tex_scale)
         multiple_tri_grp = VGroup(four_thirds, archimedes_triangle.copy()).arrange_submobjects(direction=RIGHT, buff=0.001)
-        self.play(ReplacementTransform(sum_of_two[2], multiple_tri_grp), sum_of_two[1].shift, LEFT * 0.2)
+        self.play(Transform(sum_of_two[2], multiple_tri_grp), sum_of_two[1].shift, LEFT * 0.4)
+
+        eqn_RHS = TexMobject("\\dfrac{4}{3}\\,","S_{\\tiny{y_1 y_2 y_3}}", "+","\\, S_{\\small y_1 y_3 x_3 x_1 }").scale(tex_scale)
+        sum_of_3_areas = TexMobject("\\dfrac{4}{3} \\big(","S_{y_1y_2x_2x_1}","\\,+","S_{y_2y_3x_3x_2}","\\,-","S_{y_1y_3x_3x_1}","\\big) +","\\, S_{\\small y_1 y_3 x_3 x_1 }").scale(tex_scale)
+        sum_of_3_areas.next_to(sum_of_two[1])#.arrange_submobjects(direction=RIGHT)
+
+        def get_trap(points, **kwargs):
+            trap = VMobject(**kwargs)
+            trap.set_points_as_corners([*points, points[0]])
+            return trap
+
+        x1, x2, x3 = [pseudo_dot.get_center() for pseudo_dot in pseudo_dots]
+        y1, y2, y3 = [dot.get_center() for dot in dots]
+
+        trap_group = VGroup(*[get_trap(pts, stroke_width=0, fill_opacity=.5, fill_color=color,) for pts, color in zip([[y1,y2,x2,x1],[y2,y3,x3,x2],[y1,y3,x3,x1]], [YELLOW, PURPLE, GREEN])])
+        pseudo_arch_tri = get_trap([y1, y2, y3], stroke_width=0, fill_color=RED, fill_opacity=1)
+        self.play(ReplacementTransform(sum_of_two[2:], eqn_RHS))
+        self.play(
+            ReplacementTransform(eqn_RHS, sum_of_3_areas),
+            # eqn_RHS[-1].move_to,eqn1_RHS[-2:-1].get_center()
+            )
+
+        self.play(par_n_dots.fade, .75)
+        self.play(FadeIn(pseudo_arch_tri))
+        self.play(ReplacementTransform(pseudo_arch_tri, trap_group[0]),  Indicate(sum_of_3_areas[1]))
+        for  i,j in zip(range(0,2), [3,5]):
+            self.play(ReplacementTransform(trap_group[i], trap_group[i+1]),  Indicate(sum_of_3_areas[j]))
+
+        trap_area_texts = TexMobject("\\dfrac{y_1+y_2}{2}\\,\\Delta x","\\dfrac{y_2+y_3}{2}\\,\\Delta x","\\dfrac{y_1+y_3}{2} \\,(2\\Delta x)")
+        for text, trap_area_text, scale_fac in zip([sum_of_3_areas[1],sum_of_3_areas[3],sum_of_3_areas[5]],trap_area_texts, [.55,.55,.45]):
+            trap_area_text.scale(scale_fac)
+            trap_area_text.move_to(text.get_center())
+            self.play(Transform(text, trap_area_text))
+
+
+
+
+        # self.add(trap_group[-1])
 
         self.wait()
