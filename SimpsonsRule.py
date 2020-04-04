@@ -146,19 +146,19 @@ class Simpsons(GraphScene):
              y1]
         )
 
-        x_labels = TexMobject("x_1","x_2","x_3").scale(.75)
+        x_labels = TexMobject("A", "B", "C").scale(.75)
         pseudo_dots = VGroup()
-        for x_label, x_pos in zip(x_labels,for_later_exp):
+        for x_label, x_pos in zip(x_labels, for_later_exp):
             x_label.next_to(x_pos, direction=DOWN)
             x_point = Dot(radius=.00001).move_to(x_pos)
             pseudo_dots.add(x_point)
 
         self.add(x_labels)
         lines = VGroup(
-            *[DashedLine(dot.get_center(), x_pt, stroke_width=1) for dot, x_pt in zip(dots,for_later_exp)],
-            *[DashedLine(dots[i].get_center(), dots[i+1].get_center(), stroke_width=1) for i in range(3) if i != 2],
+            *[DashedLine(dot.get_center(), x_pt, stroke_width=1) for dot, x_pt in zip(dots, for_later_exp)],
+            *[DashedLine(dots[i].get_center(), dots[i + 1].get_center(), stroke_width=1) for i in range(3) if i != 2],
             DashedLine(y1, y3, stroke_width=1)
-            )
+        )
         par_n_dots = VGroup(first_iteration[::3], x_labels, pseudo_dots, lines)
 
         self.play(FadeIn(first_iteration))
@@ -168,8 +168,6 @@ class Simpsons(GraphScene):
             FadeOut(graph),
             * [FadeOut(first_iteration[p]) for p in [1, 2]],
         )
-
-
 
         plus_n_equal = TexMobject("=", "+")
         sum_of_two = VGroup(par_n_dots.copy(), plus_n_equal[0], mini_par, plus_n_equal[1], trap)\
@@ -184,14 +182,13 @@ class Simpsons(GraphScene):
         labels = TexMobject("y_{n-1}", "y_n", "y_{n+1}")
         labels_copy = labels.copy()
 
-
         for label, dot, direction in zip(labels, dots, [UP, UP, UR]):
             label.next_to(dot, direction=direction, buff=.04).scale(.75)
 
         for label_copy, dot_copy, direction in zip(labels_copy, dots_copy, [UL, UP, DOWN]):
             label_copy.next_to(dot_copy, direction=direction, buff=.01).scale(.65)
 
-        numbered_labels = TexMobject("y_1", "y_2", "y_3")
+        numbered_labels = TexMobject("P_1", "P_2", "P_3")
         numbered_labels_copy = numbered_labels.copy()
 
         for numbered_label, dot, direction in zip(numbered_labels, dots, [UP, UP, UR]):
@@ -214,16 +211,16 @@ class Simpsons(GraphScene):
             fill_opacity=.5
         ).add(numbered_labels_copy)
 
-        tex_scale=.75
+        tex_scale = .75
         sum_of_two[2].add(archimedes_triangle)
         self.play(Write(archimedes_triangle))
         four_thirds = TexMobject("\\dfrac{4}{3} \\,\\times").scale(tex_scale)
         multiple_tri_grp = VGroup(four_thirds, archimedes_triangle.copy()).arrange_submobjects(direction=RIGHT, buff=0.001)
         self.play(Transform(sum_of_two[2], multiple_tri_grp), sum_of_two[1].shift, LEFT * 0.4)
 
-        eqn_RHS = TexMobject("\\dfrac{4}{3}\\,","S_{\\tiny{y_1 y_2 y_3}}", "+","\\, S_{\\small y_1 y_3 x_3 x_1 }").scale(tex_scale)
-        sum_of_3_areas = TexMobject("\\dfrac{4}{3} \\big(","S_{y_1y_2x_2x_1}","\\,+","S_{y_2y_3x_3x_2}","\\,-","S_{y_1y_3x_3x_1}","\\big) +","\\, S_{\\small y_1 y_3 x_3 x_1 }").scale(tex_scale)
-        sum_of_3_areas.next_to(sum_of_two[1])#.arrange_submobjects(direction=RIGHT)
+        eqn_RHS = TexMobject("\\dfrac{4}{3}\\,", "S_{\\tiny{P_1 P_2 P_3}}", "+", "\\, S_{\\small P_1 P_3 C A }").scale(tex_scale)
+        sum_of_3_areas = TexMobject("\\dfrac{4}{3} \\Bigg(", "S_{P_1P_2BA}", "\\,+", "S_{P_2P_3CB}", "\\,-", "S_{P_1P_3CA}", "\\Bigg) +", "\\, S_{\\small P_1 P_3 C A }").scale(tex_scale)
+        sum_of_3_areas.next_to(sum_of_two[1])  # .arrange_submobjects(direction=RIGHT)
 
         def get_trap(points, **kwargs):
             trap = VMobject(**kwargs)
@@ -233,29 +230,51 @@ class Simpsons(GraphScene):
         x1, x2, x3 = [pseudo_dot.get_center() for pseudo_dot in pseudo_dots]
         y1, y2, y3 = [dot.get_center() for dot in dots]
 
-        trap_group = VGroup(*[get_trap(pts, stroke_width=0, fill_opacity=.5, fill_color=color,) for pts, color in zip([[y1,y2,x2,x1],[y2,y3,x3,x2],[y1,y3,x3,x1]], [YELLOW, PURPLE, GREEN])])
+        trap_group = VGroup(*[get_trap(pts, stroke_width=0, fill_opacity=.5, fill_color=color,) for pts, color in zip([[y1, y2, x2, x1], [y2, y3, x3, x2], [y1, y3, x3, x1]], [YELLOW, PURPLE, GREEN])])
         pseudo_arch_tri = get_trap([y1, y2, y3], stroke_width=0, fill_color=RED, fill_opacity=1)
         self.play(ReplacementTransform(sum_of_two[2:], eqn_RHS))
         self.play(
             ReplacementTransform(eqn_RHS, sum_of_3_areas),
             # eqn_RHS[-1].move_to,eqn1_RHS[-2:-1].get_center()
-            )
+        )
 
-        self.play(par_n_dots.fade, .75)
+        self.play(par_n_dots[0].fade, .75)
         self.play(FadeIn(pseudo_arch_tri))
-        self.play(ReplacementTransform(pseudo_arch_tri, trap_group[0]),  Indicate(sum_of_3_areas[1]))
-        for  i,j in zip(range(0,2), [3,5]):
-            self.play(ReplacementTransform(trap_group[i], trap_group[i+1]),  Indicate(sum_of_3_areas[j]))
+        self.play(ReplacementTransform(pseudo_arch_tri, trap_group[0]), Indicate(sum_of_3_areas[1]))
+        for i, j in zip(range(0, 2), [3, 5]):
+            self.play(ReplacementTransform(trap_group[i], trap_group[i + 1]), Indicate(sum_of_3_areas[j]))
 
-        trap_area_texts = TexMobject("\\dfrac{y_1+y_2}{2}\\,\\Delta x","\\dfrac{y_2+y_3}{2}\\,\\Delta x","\\dfrac{y_1+y_3}{2} \\,(2\\Delta x)")
-        for text, trap_area_text, scale_fac in zip([sum_of_3_areas[1],sum_of_3_areas[3],sum_of_3_areas[5]],trap_area_texts, [.55,.55,.45]):
+        sum_of_3_areas_2 = TexMobject(
+            "\\dfrac{1}{3} \\Bigg(",
+            "4\\,S_{P_1P_2BA}",
+            "\\,+", "4\\,S_{P_2P_3CB}",
+            "\\,-", "4\\,S_{P_1P_3CA}",
+            " +",
+            "\\, 3\\,S_{\\small P_1 P_3 C A }\\Bigg)"
+        ).scale(tex_scale).next_to(sum_of_two[1])
+
+        self.play(ReplacementTransform(sum_of_3_areas, sum_of_3_areas_2))
+        sum_of_3_areas_3 = TexMobject(
+            "\\dfrac{1}{3} \\Bigg(",
+            "4\\,S_{P_1P_2BA}",
+            "\\,+",
+            "4\\,S_{P_2P_3CB}",
+            "\\,-",
+            "\\,S_{P_1P_3CA}",
+            "\\Bigg)"
+        ).scale(tex_scale).next_to(sum_of_two[1])
+        self.play(ReplacementTransform(sum_of_3_areas_2, sum_of_3_areas_3))
+
+        trap_area_texts = TexMobject("4\\,\\dfrac{y_1+y_2}{2}\\,\\Delta x", "4\\,\\dfrac{y_2+y_3}{2}\\,\\Delta x", "\\dfrac{y_1+y_3}{2} \\,(2\\Delta x)")
+
+        for text, trap_area_text, scale_fac in zip([sum_of_3_areas_3[1], sum_of_3_areas_3[3], sum_of_3_areas_3[5]], trap_area_texts, [.55, .55, .5]):
             trap_area_text.scale(scale_fac)
             trap_area_text.move_to(text.get_center())
             self.play(Transform(text, trap_area_text))
 
-
-
-
+        # right_hand_side = VGroup(sum_of_3_areas_3)
+        simpsons_rule = TexMobject("\\dfrac{\\Delta x}{3}(", "y_1", "+", "4\\,y_2", "+", "y_3", ")").scale(tex_scale).next_to(sum_of_two[1])
+        self.play(ReplacementTransform(sum_of_3_areas_3, simpsons_rule))
         # self.add(trap_group[-1])
 
         self.wait()
