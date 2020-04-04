@@ -39,6 +39,11 @@ class Simpsons(GraphScene):
         return x
 
     def construct(self):
+        def get_triangle(corners, **kwargs):
+            tri = VMobject(**kwargs)
+            tri.set_points_as_corners([*corners, corners[0]])
+            return tri
+
         def func(t):
             return .05 * t**3 - .55 * t**2 + t + 7
 
@@ -49,7 +54,7 @@ class Simpsons(GraphScene):
         iterations = VGroup()
         make_permanent = True
 
-        for n in [2, 1, .5]:
+        for n in [2]:  # , 1, .5]:
             x_samps = np.arange(0, 8, n)
             x_samps_centers = []
 
@@ -111,6 +116,7 @@ class Simpsons(GraphScene):
             # self.add(parab_approx, dots, line, parab_area)
 
         # first_iteration = iterations[0][0]
+        dots = first_iteration[0]
         mini_par = VMobject(stroke_width=0, color=YELLOW, fill_opacity=.5)
         pts = []
 
@@ -120,22 +126,22 @@ class Simpsons(GraphScene):
                 pts.append(p)
 
         mini_par_points = [
-            first_iteration[0][0].get_center(),
+            dots[0].get_center(),
             # *[self.input_to_graph_point(a, mini_par_graph) for a in np.arange(0, 4, 1)], # this didn't work for some reason T_T
             *pts,
-            first_iteration[0][0].get_center()
+            dots[0].get_center()
         ]
-        dots_copy = first_iteration[0].copy()
+        dots_copy = dots.copy()
         mini_par.set_points_as_corners(
             mini_par_points
         ).add(dots_copy)
 
         trap = VMobject(stroke_width=0, color=GREEN, fill_opacity=.5)
         trap.set_points_as_corners(
-            [first_iteration[0][0].get_center(),
-             first_iteration[0][2].get_center(),
+            [dots[0].get_center(),
+             dots[2].get_center(),
              for_later_exp[1], for_later_exp[0],
-             first_iteration[0][0].get_center()]
+             dots[0].get_center()]
         )
 
         par_n_dots = first_iteration[::3]
@@ -161,7 +167,7 @@ class Simpsons(GraphScene):
         labels = TexMobject("y_{n-1}", "y_n", "y_{n+1}")
         labels_copy = labels.copy()
 
-        for label, dot, direction in zip(labels, first_iteration[0], [UP, UP, UR]):
+        for label, dot, direction in zip(labels, dots, [UP, UP, UR]):
             label.next_to(dot, direction=direction, buff=.04).scale(.75)
 
         for label_copy, dot_copy, direction in zip(labels_copy, dots_copy, [UL, UP, DOWN]):
@@ -170,7 +176,7 @@ class Simpsons(GraphScene):
         numbered_labels = TexMobject("y_1", "y_2", "y_3")
         numbered_labels_copy = numbered_labels.copy()
 
-        for numbered_label, dot, direction in zip(numbered_labels, first_iteration[0], [UP, UP, UR]):
+        for numbered_label, dot, direction in zip(numbered_labels, dots, [UP, UP, UR]):
             numbered_label.next_to(dot, direction=direction, buff=.04).scale(.75)
 
         for numbered_label_copy, dot_copy, direction in zip(numbered_labels_copy, dots_copy, [UL, UP, DOWN]):
@@ -181,4 +187,18 @@ class Simpsons(GraphScene):
         self.wait(2)
 
         self.play(ReplacementTransform(labels, numbered_labels), ReplacementTransform(labels_copy, numbered_labels_copy))
+        self.wait()
+
+        archimedes_triangle = get_triangle(
+            [dot.get_center() for dot in dots_copy],
+            stroke_width=1.5,
+            color=RED,
+            fill_opacity=.5
+        ).add(numbered_labels_copy)
+        sum_of_two[2].add(archimedes_triangle)
+        self.play(Write(archimedes_triangle))
+        four_thirds = TexMobject("\\dfrac{4}{3} \\,\\times").scale(.75)
+        multiple_tri_grp = VGroup(four_thirds, archimedes_triangle.copy()).arrange_submobjects(direction=RIGHT, buff=0.001)
+        self.play(ReplacementTransform(sum_of_two[2], multiple_tri_grp), sum_of_two[1].shift, LEFT * 0.2)
+
         self.wait()
