@@ -1,6 +1,146 @@
 from manimlib.imports import *
 
 
+class MeasureDistance(VGroup):
+    CONFIG = {
+        "color": RED_B,
+        "buff": 0.3,
+        "lateral": 0.3,
+        "invert": False,
+        "dashed_segment_length": 0.09,
+        "dashed": True,
+        "ang_arrows": 30 * DEGREES,
+        "size_arrows": 0.2,
+        "stroke": 2.4,
+    }
+
+    def __init__(self, mob, **kwargs):
+        VGroup.__init__(self, **kwargs)
+        if self.dashed == True:
+            medicion = DashedLine(ORIGIN, mob.get_length() * RIGHT, dashed_segment_length=self.dashed_segment_length).set_color(self.color)
+        else:
+            medicion = Line(ORIGIN, mob.get_length() * RIGHT)
+
+        medicion.set_stroke(None, self.stroke)
+
+        pre_medicion = Line(ORIGIN, self.lateral * RIGHT).rotate(PI / 2).set_stroke(None, self.stroke)
+        pos_medicion = pre_medicion.copy()
+
+        pre_medicion.move_to(medicion.get_start())
+        pos_medicion.move_to(medicion.get_end())
+
+        angulo = mob.get_angle()
+        matriz_rotacion = rotation_matrix(PI / 2, OUT)
+        vector_unitario = mob.get_unit_vector()
+        direccion = np.matmul(matriz_rotacion, vector_unitario)
+        self.direccion = direccion
+
+        self.add(medicion, pre_medicion, pos_medicion)
+        self.rotate(angulo)
+        self.move_to(mob)
+
+        if self.invert == True:
+            self.shift(-direccion * self.buff)
+        else:
+            self.shift(direccion * self.buff)
+        self.set_color(self.color)
+        self.tip_point_index = -np.argmin(self.get_all_points()[-1, :])
+
+    def add_tips(self):
+        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
+        vector_unitario = linea_referencia.get_unit_vector()
+
+        punto_final1 = self[0][-1].get_end()
+        punto_inicial1 = punto_final1 - vector_unitario * self.size_arrows
+
+        punto_inicial2 = self[0][0].get_start()
+        punto_final2 = punto_inicial2 + vector_unitario * self.size_arrows
+
+        lin1_1 = Line(punto_inicial1, punto_final1).set_color(self[0].get_color()).set_stroke(None, self.stroke)
+        lin1_2 = lin1_1.copy()
+        lin2_1 = Line(punto_inicial2, punto_final2).set_color(self[0].get_color()).set_stroke(None, self.stroke)
+        lin2_2 = lin2_1.copy()
+
+        lin1_1.rotate(self.ang_arrows, about_point=punto_final1, about_edge=punto_final1)
+        lin1_2.rotate(-self.ang_arrows, about_point=punto_final1, about_edge=punto_final1)
+
+        lin2_1.rotate(self.ang_arrows, about_point=punto_inicial2, about_edge=punto_inicial2)
+        lin2_2.rotate(-self.ang_arrows, about_point=punto_inicial2, about_edge=punto_inicial2)
+
+        return self.add(lin1_1, lin1_2, lin2_1, lin2_2)
+
+    def add_tex(self, text, scale=1, buff=-1, **moreargs):
+        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
+        texto = TexMobject(text, **moreargs)
+        ancho = texto.get_height() / 2
+        texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
+        texto.shift(self.direccion * (buff + 1) * ancho)
+        return self.add(texto)
+
+    def add_text(self, text, scale=1, buff=0.1, **moreargs):
+        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
+        texto = TextMobject(text, **moreargs)
+        ancho = texto.get_height() / 2
+        texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
+        texto.shift(self.direccion * (buff + 1) * ancho)
+        return self.add(texto)
+
+    def add_size(self, text, scale=1, buff=0.1, **moreargs):
+        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
+        texto = TextMobject(text, **moreargs)
+        ancho = texto.get_height() / 2
+        texto.rotate(linea_referencia.get_angle())
+        texto.shift(self.direccion * (buff + 1) * ancho)
+        return self.add(texto)
+
+    def add_letter(self, text, scale=1, buff=0.1, **moreargs):
+        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
+        texto = TexMobject(text, **moreargs).scale(scale).move_to(self)
+        ancho = texto.get_height() / 2
+        texto.shift(self.direccion * (buff + 1) * ancho)
+        return self.add(texto)
+
+    def get_text(self, text, scale=1, buff=0.1, invert_dir=False, invert_texto=False, remove_rot=False, **moreargs):
+        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
+        texto = TextMobject(text, **moreargs)
+        ancho = texto.get_height() / 2
+        if invert_texto:
+            inv = PI
+        else:
+            inv = 0
+        if remove_rot:
+            texto.scale(scale).move_to(self)
+        else:
+            texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
+            texto.rotate(inv)
+        if invert_dir:
+            inv = -1
+        else:
+            inv = 1
+        texto.shift(self.direccion * (buff + 1) * ancho * inv)
+        return texto
+
+    def get_tex(self, tex, scale=1, buff=1, invert_dir=False, invert_texto=False, remove_rot=True, **moreargs):
+        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
+        texto = TexMobject(tex, **moreargs)
+        ancho = texto.get_height() / 2
+        if invert_texto:
+            inv = PI
+        else:
+            inv = 0
+        if remove_rot:
+            texto.scale(scale).move_to(self)
+        else:
+            texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
+            texto.rotate(inv)
+        if invert_dir:
+            inv = -1
+        else:
+            inv = 1
+        texto.shift(self.direccion * (buff + 1) * ancho)
+        return texto
+
+
 class Simpsons(GraphScene):
     CONFIG = {
         "x_min": -1,
@@ -47,14 +187,48 @@ class Simpsons(GraphScene):
         def func(t):
             return .05 * t**3 - .55 * t**2 + t + 7
 
-        self.setup_axes()
+        ctp = self.coords_to_point
+        title = TextMobject("Simpsons Rule").scale(2)
+        self.play(Write(title))
+        self.play(title.to_edge, UP)
+        self.play(FadeOut(title))
+
+        self.setup_axes(animate=True)
+
         graph = self.get_graph(func, stroke_width=3, color=RED)
-        self.add(graph)
+        self.play(ShowCreation(graph))
+
+        integral = VMobject(stroke_width=0, fill_opacity=.5, color=YELLOW)
+        integral_points = [
+            self.coords_to_point(0, 0),
+            *[self.input_to_graph_point(l, graph) for l in (np.arange(0, self.x_max + .1, .1))],
+            self.coords_to_point(self.x_max, 0),
+            self.coords_to_point(0, 0),
+        ]
+        integral.set_points_as_corners(integral_points)
+        self.play(FadeIn(integral))
+        area_text = TextMobject("Area = ?").scale(1.5).move_to(integral.get_center() + 2 * DOWN)
+        self.play(Write(area_text))
+        self.play(FadeOut(area_text), FadeOut(integral))
+
+        step_size = TexMobject("\\Delta x =").to_edge(UP)
+        step = DecimalNumber(2).next_to(step_size)
+        step_text = VGroup(step_size, step).add_background_rectangle()
+
+        measure_line = Line(ctp(0, 0), ctp(2, 0), color=PURPLE).shift(.2 * DOWN)
+        delx = TexMobject("\\Delta x").scale(.75).next_to(measure_line.get_center(), buff=.2, direction=DOWN)
+
         # n = 2
         iterations = VGroup()
-        make_permanent = True
 
-        for n in [2]:  # , 1, .5]:
+        self.play(AnimationGroup(Write(measure_line), Write(delx), lag_ratio=.5), run_time=2)
+        self.wait()
+        self.play(ReplacementTransform(delx, step_text), FadeOut(measure_line))
+        self.wait()
+
+        make_permanent = True
+        for n in [2, 1, .5]:
+            self.play(step.set_value, n)
             x_samps = np.arange(0, 8, n)
             x_samps_centers = []
 
@@ -115,6 +289,7 @@ class Simpsons(GraphScene):
             self.wait()
             # self.add(parab_approx, dots, line, parab_area)
 
+        self.play(FadeOut(step_text))
         # first_iteration = iterations[0][0]
         dots = first_iteration[0]
         x1, x2, x3 = for_later_exp
@@ -153,15 +328,17 @@ class Simpsons(GraphScene):
             x_point = Dot(radius=.00001).move_to(x_pos)
             pseudo_dots.add(x_point)
 
-        self.add(x_labels)
+        # self.add(x_labels)
         lines = VGroup(
             *[DashedLine(dot.get_center(), x_pt, stroke_width=1) for dot, x_pt in zip(dots, for_later_exp)],
             *[DashedLine(dots[i].get_center(), dots[i + 1].get_center(), stroke_width=1) for i in range(3) if i != 2],
             DashedLine(y1, y3, stroke_width=1)
         )
-        par_n_dots = VGroup(first_iteration[::3], x_labels, pseudo_dots, lines)
+        par_n_dots = VGroup(first_iteration[::3], pseudo_dots, lines)
 
         self.play(FadeIn(first_iteration))
+        self.x_axis.save_state()
+        self.y_axis.save_state()
         self.play(
             self.x_axis.fade, 1,
             self.y_axis.fade, 1,
@@ -197,11 +374,11 @@ class Simpsons(GraphScene):
         for numbered_label_copy, dot_copy, direction in zip(numbered_labels_copy, dots_copy, [UL, UP, DOWN]):
             numbered_label_copy.next_to(dot_copy, direction=direction, buff=.01).scale(.65)
 
-        self.add(labels, labels_copy)
+        # self.add(labels, labels_copy)
         # self.play(WiggleOutThenIn(mini_par[-3:]))
         self.wait(2)
 
-        self.play(ReplacementTransform(labels, numbered_labels), ReplacementTransform(labels_copy, numbered_labels_copy))
+        self.play(Write(numbered_labels), Write(numbered_labels_copy), Write(x_labels))
         self.wait()
 
         archimedes_triangle = get_triangle(
@@ -213,7 +390,7 @@ class Simpsons(GraphScene):
 
         tex_scale = .75
         sum_of_two[2].add(archimedes_triangle)
-        self.play(Write(archimedes_triangle))
+        self.play(FadeIn(archimedes_triangle))
         four_thirds = TexMobject("\\dfrac{4}{3} \\,\\times").scale(tex_scale)
         multiple_tri_grp = VGroup(four_thirds, archimedes_triangle.copy()).arrange_submobjects(direction=RIGHT, buff=0.001)
         self.play(Transform(sum_of_two[2], multiple_tri_grp), sum_of_two[1].shift, LEFT * 0.4)
@@ -232,17 +409,22 @@ class Simpsons(GraphScene):
 
         trap_group = VGroup(*[get_trap(pts, stroke_width=0, fill_opacity=.5, fill_color=color,) for pts, color in zip([[y1, y2, x2, x1], [y2, y3, x3, x2], [y1, y3, x3, x1]], [YELLOW, PURPLE, GREEN])])
         pseudo_arch_tri = get_trap([y1, y2, y3], stroke_width=0, fill_color=RED, fill_opacity=1)
+        self.wait()
         self.play(ReplacementTransform(sum_of_two[2:], eqn_RHS))
+        self.wait()
         self.play(
             ReplacementTransform(eqn_RHS, sum_of_3_areas),
             # eqn_RHS[-1].move_to,eqn1_RHS[-2:-1].get_center()
         )
 
         self.play(par_n_dots[0].fade, .75)
+        self.wait()
         self.play(FadeIn(pseudo_arch_tri))
+        self.wait()
         self.play(ReplacementTransform(pseudo_arch_tri, trap_group[0]), Indicate(sum_of_3_areas[1]))
         for i, j in zip(range(0, 2), [3, 5]):
-            self.play(ReplacementTransform(trap_group[i], trap_group[i + 1]), Indicate(sum_of_3_areas[j]))
+            self.play(ReplacementTransform(trap_group[i], trap_group[i + 1]), Indicate(sum_of_3_areas[j]), run_time=2)
+            self.wait()
 
         sum_of_3_areas_2 = TexMobject(
             "\\dfrac{1}{3} \\Bigg(",
@@ -254,6 +436,8 @@ class Simpsons(GraphScene):
         ).scale(tex_scale).next_to(sum_of_two[1])
 
         self.play(ReplacementTransform(sum_of_3_areas, sum_of_3_areas_2))
+        self.wait()
+
         sum_of_3_areas_3 = TexMobject(
             "\\dfrac{1}{3} \\Bigg(",
             "4\\,S_{P_1P_2BA}",
@@ -264,6 +448,7 @@ class Simpsons(GraphScene):
             "\\Bigg)"
         ).scale(tex_scale).next_to(sum_of_two[1])
         self.play(ReplacementTransform(sum_of_3_areas_2, sum_of_3_areas_3))
+        self.wait()
 
         trap_area_texts = TexMobject("4\\,\\dfrac{y_1+y_2}{2}\\,\\Delta x", "4\\,\\dfrac{y_2+y_3}{2}\\,\\Delta x", "\\dfrac{y_1+y_3}{2} \\,(2\\Delta x)")
 
@@ -271,10 +456,31 @@ class Simpsons(GraphScene):
             trap_area_text.scale(scale_fac)
             trap_area_text.move_to(text.get_center())
             self.play(Transform(text, trap_area_text))
+            self.wait()
 
         # right_hand_side = VGroup(sum_of_3_areas_3)
-        simpsons_rule = TexMobject("\\dfrac{\\Delta x}{3}(", "y_1", "+", "4\\,y_2", "+", "y_3", ")").scale(tex_scale).next_to(sum_of_two[1])
-        self.play(ReplacementTransform(sum_of_3_areas_3, simpsons_rule))
-        # self.add(trap_group[-1])
+        simpsons_rule = [
+            TexMobject("\\dfrac{\\Delta x}{3}(", "y_1", "+", "4\\,y_2", "+", "y_3", ")"),
+            TexMobject("\\dfrac{\\Delta x}{3}(", "y_1", "+", "4\\,y_2", "+", "y_3", ")", "+", "\\dfrac{\\Delta x}{3}(", "y_3", "+", "4\\,y_4", "+", "y_5", ")", "+", "...", "\\\\",
+                       "+", "\\dfrac{\\Delta x}{3}(", "y_{n - 2}", " + ", "4\\, y_{n - 1}", " + ", "y_n", ")"),
+            TexMobject("\\dfrac{\\Delta x}{3}\\Big[", "(y_1+y_n)", "+", "4\\,(y_2+y_4+...\\,+y_{n-1})", "\\\\ ", "+", "\\,2(y_3+y_5+...\\,+y_{n-2})", "\\Big]"),
 
+        ]
+        simpsons_rule[-1][-3:].shift(RIGHT * 2)
+        for simp in simpsons_rule:
+            simp.scale(tex_scale).next_to(sum_of_two[1])
+
+        axes_n_graph = VGroup(graph, integral, self.x_axis, self.y_axis).scale(.35).move_to(par_n_dots.get_center())
+        y_axis = Line(1.5 * DOWN, 1.5 * UP).move_to(self.y_axis).shift(0.05 * LEFT)
+        x_axis = Line(2 * LEFT, 2 * RIGHT).move_to(self.x_axis).shift(0.05 * DOWN)
+
+        axes_n_graph.add_to_back(x_axis, y_axis)
+
+        self.play(ReplacementTransform(sum_of_3_areas_3, simpsons_rule[0]))
         self.wait()
+        self.play(FadeOut(par_n_dots), FadeOut(trap_group[-1]), FadeOut(numbered_labels))
+        self.play(ReplacementTransform(simpsons_rule[0], simpsons_rule[1]), FadeIn(axes_n_graph))
+        self.wait()
+        self.play(ReplacementTransform(simpsons_rule[1], simpsons_rule[2]))
+        self.wait()
+        self.play(*[FadeOut(mobj) for mobj in self.mobjects])
