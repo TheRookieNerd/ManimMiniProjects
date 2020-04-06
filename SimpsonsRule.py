@@ -1,190 +1,41 @@
 from manimlib.imports import *
 
 
-<< << << < HEAD
-
-
 class Simpsons(GraphScene):
     CONFIG = {
         "x_min": -1,
-        "x_max": 7,
-        "x_axis_width": 9,
-        == == == =
-        class MeasureDistance(VGroup):
-        CONFIG = {
-            "color": RED_B,
-            "buff": 0.3,
-            "lateral": 0.3,
-            "invert": False,
-            "dashed_segment_length": 0.09,
-            "dashed": True,
-            "ang_arrows": 30 * DEGREES,
-            "size_arrows": 0.2,
-            "stroke": 2.4,
-        }
+        "x_max": 11,
+        "x_axis_width": 10,
 
-        def __init__(self, mob, **kwargs):
-        VGroup.__init__(self, **kwargs)
-        if self.dashed == True:
-            medicion = DashedLine(ORIGIN, mob.get_length() * RIGHT, dashed_segment_length=self.dashed_segment_length).set_color(self.color)
-        else:
-            medicion = Line(ORIGIN, mob.get_length() * RIGHT)
+        "x_tick_frequency": 1,
+        "x_leftmost_tick": None,  # Change if different from x_min
+        "x_labeled_nums": None,
+        "x_axis_label": "$x$",
+        "y_min": -1,
+        "y_max": 11,
+        "y_axis_height": 6,
+        "y_tick_frequency": 2,
+        "y_bottom_tick": None,  # Change if different from y_min
+        "y_labeled_nums": None,
+        "y_axis_label": "$y$",
+        "axes_color": GREY,
+        "graph_origin": 2.5 * DOWN + 4 * LEFT,
+        "exclude_zero_label": True,
+        "default_graph_colors": [BLUE, GREEN, YELLOW],
+        "default_derivative_color": GREEN,
+        "default_input_color": YELLOW,
+        "default_riemann_start_color": BLUE,
+        "default_riemann_end_color": GREEN,
+        "area_opacity": 0.8,
+        "num_rects": 50,
 
-        medicion.set_stroke(None, self.stroke)
+    }
 
-        pre_medicion = Line(ORIGIN, self.lateral * RIGHT).rotate(PI / 2).set_stroke(None, self.stroke)
-        pos_medicion = pre_medicion.copy()
-
-        pre_medicion.move_to(medicion.get_start())
-        pos_medicion.move_to(medicion.get_end())
-
-        angulo = mob.get_angle()
-        matriz_rotacion = rotation_matrix(PI / 2, OUT)
-        vector_unitario = mob.get_unit_vector()
-        direccion = np.matmul(matriz_rotacion, vector_unitario)
-        self.direccion = direccion
-
-        self.add(medicion, pre_medicion, pos_medicion)
-        self.rotate(angulo)
-        self.move_to(mob)
-
-        if self.invert == True:
-            self.shift(-direccion * self.buff)
-        else:
-            self.shift(direccion * self.buff)
-        self.set_color(self.color)
-        self.tip_point_index = -np.argmin(self.get_all_points()[-1, :])
-
-        def add_tips(self):
-        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
-        vector_unitario = linea_referencia.get_unit_vector()
-
-        punto_final1 = self[0][-1].get_end()
-        punto_inicial1 = punto_final1 - vector_unitario * self.size_arrows
-
-        punto_inicial2 = self[0][0].get_start()
-        punto_final2 = punto_inicial2 + vector_unitario * self.size_arrows
-
-        lin1_1 = Line(punto_inicial1, punto_final1).set_color(self[0].get_color()).set_stroke(None, self.stroke)
-        lin1_2 = lin1_1.copy()
-        lin2_1 = Line(punto_inicial2, punto_final2).set_color(self[0].get_color()).set_stroke(None, self.stroke)
-        lin2_2 = lin2_1.copy()
-
-        lin1_1.rotate(self.ang_arrows, about_point=punto_final1, about_edge=punto_final1)
-        lin1_2.rotate(-self.ang_arrows, about_point=punto_final1, about_edge=punto_final1)
-
-        lin2_1.rotate(self.ang_arrows, about_point=punto_inicial2, about_edge=punto_inicial2)
-        lin2_2.rotate(-self.ang_arrows, about_point=punto_inicial2, about_edge=punto_inicial2)
-
-        return self.add(lin1_1, lin1_2, lin2_1, lin2_2)
-
-        def add_tex(self, text, scale=1, buff=-1, **moreargs):
-        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
-        texto = TexMobject(text, **moreargs)
-        ancho = texto.get_height() / 2
-        texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
-        texto.shift(self.direccion * (buff + 1) * ancho)
-        return self.add(texto)
-
-        def add_text(self, text, scale=1, buff=0.1, **moreargs):
-        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
-        texto = TextMobject(text, **moreargs)
-        ancho = texto.get_height() / 2
-        texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
-        texto.shift(self.direccion * (buff + 1) * ancho)
-        return self.add(texto)
-
-        def add_size(self, text, scale=1, buff=0.1, **moreargs):
-        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
-        texto = TextMobject(text, **moreargs)
-        ancho = texto.get_height() / 2
-        texto.rotate(linea_referencia.get_angle())
-        texto.shift(self.direccion * (buff + 1) * ancho)
-        return self.add(texto)
-
-        def add_letter(self, text, scale=1, buff=0.1, **moreargs):
-        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
-        texto = TexMobject(text, **moreargs).scale(scale).move_to(self)
-        ancho = texto.get_height() / 2
-        texto.shift(self.direccion * (buff + 1) * ancho)
-        return self.add(texto)
-
-        def get_text(self, text, scale=1, buff=0.1, invert_dir=False, invert_texto=False, remove_rot=False, **moreargs):
-        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
-        texto = TextMobject(text, **moreargs)
-        ancho = texto.get_height() / 2
-        if invert_texto:
-            inv = PI
-        else:
-            inv = 0
-        if remove_rot:
-            texto.scale(scale).move_to(self)
-        else:
-            texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
-            texto.rotate(inv)
-        if invert_dir:
-            inv = -1
-        else:
-            inv = 1
-        texto.shift(self.direccion * (buff + 1) * ancho * inv)
-        return texto
-
-        def get_tex(self, tex, scale=1, buff=1, invert_dir=False, invert_texto=False, remove_rot=True, **moreargs):
-        linea_referencia = Line(self[0][0].get_start(), self[0][-1].get_end())
-        texto = TexMobject(tex, **moreargs)
-        ancho = texto.get_height() / 2
-        if invert_texto:
-            inv = PI
-        else:
-            inv = 0
-        if remove_rot:
-            texto.scale(scale).move_to(self)
-        else:
-            texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
-            texto.rotate(inv)
-        if invert_dir:
-            inv = -1
-        else:
-            inv = 1
-        texto.shift(self.direccion * (buff + 1) * ancho)
-        return texto
-
-
-        class Simpsons(GraphScene):
-        CONFIG = {
-            "x_min": -1,
-            "x_max": 11,
-            "x_axis_width": 10,
-            >>>>>> > Simpsons
-            "x_tick_frequency": 1,
-            "x_leftmost_tick": None,  # Change if different from x_min
-            "x_labeled_nums": None,
-            "x_axis_label": "$x$",
-            "y_min": -1,
-            "y_max": 11,
-            "y_axis_height": 6,
-            "y_tick_frequency": 2,
-            "y_bottom_tick": None,  # Change if different from y_min
-            "y_labeled_nums": None,
-            "y_axis_label": "$y$",
-            "axes_color": GREY,
-            "graph_origin": 2.5 * DOWN + 4 * LEFT,
-            "exclude_zero_label": True,
-            "default_graph_colors": [BLUE, GREEN, YELLOW],
-            "default_derivative_color": GREEN,
-            "default_input_color": YELLOW,
-            "default_riemann_start_color": BLUE,
-            "default_riemann_end_color": GREEN,
-            "area_opacity": 0.8,
-            "num_rects": 50,
-            << << << < HEAD
-        }
-
-        def construct(self):
+    def construct(self):
         self.setup_axes()
         graph = self.get_graph(lambda t: .05 * t**3 - .45 * t**2 + t + 5)
         self.add(graph)
-        == == == =
+
 
     }
 
@@ -513,7 +364,13 @@ class Simpsons(GraphScene):
         self.wait()
         self.play(ReplacementTransform(simpsons_rule[1], simpsons_rule[2]))
         self.wait()
+        how = TextMobject("How").scale(2).to_edge(UP)
+        self.add(how)
         self.play(*[FadeOut(mobj) for mobj in self.mobjects], run_time=5)
 
 
->>>>>> > Simpsons
+#https://www.youtube.com/channel/UCKn6_1iFFC5fxSmFgVC9Fsw
+# You’re free to use this song in any of your videos, but you must include the following in your video description:
+# There's Probably No Time by Chris Zabriskie is licensed under a Creative Commons Attribution license (https://creativecommons.org/licenses/by/4.0/)
+# Source: http://chriszabriskie.com/uvp/
+# Artist: http://chriszabriskie.com/
