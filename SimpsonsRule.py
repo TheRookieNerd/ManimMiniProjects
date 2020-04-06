@@ -144,8 +144,8 @@ class MeasureDistance(VGroup):
 class Simpsons(GraphScene):
     CONFIG = {
         "x_min": -1,
-        "x_max": 10,
-        "x_axis_width": 9,
+        "x_max": 11,
+        "x_axis_width": 10,
         "x_tick_frequency": 1,
         "x_leftmost_tick": None,  # Change if different from x_min
         "x_labeled_nums": None,
@@ -201,8 +201,8 @@ class Simpsons(GraphScene):
         integral = VMobject(stroke_width=0, fill_opacity=.5, color=YELLOW)
         integral_points = [
             self.coords_to_point(0, 0),
-            *[self.input_to_graph_point(l, graph) for l in (np.arange(0, self.x_max + .1, .1))],
-            self.coords_to_point(self.x_max, 0),
+            *[self.input_to_graph_point(l, graph) for l in (np.arange(0, self.x_max - 1 + .1, .1))],
+            self.coords_to_point(self.x_max - 1, 0),
             self.coords_to_point(0, 0),
         ]
         integral.set_points_as_corners(integral_points)
@@ -215,13 +215,24 @@ class Simpsons(GraphScene):
         step = DecimalNumber(2).next_to(step_size)
         step_text = VGroup(step_size, step).add_background_rectangle()
 
-        measure_line = Line(ctp(0, 0), ctp(2, 0), color=PURPLE).shift(.2 * DOWN)
+        number_line = VGroup(Line(ctp(0, 0), ctp(self.x_max - 1, 0), color=BLUE))
+        tick = Line(.125 * UP, .125 * DOWN, color=BLUE)
+        for i in np.arange(0, self.x_max - 1 + 2, 2):
+            tick_copy = tick.copy().move_to(ctp(i, 0)).shift(.4 * DOWN)
+            number_line.add(tick_copy)
+
+        measure_line = Line(ctp(0, 0), ctp(2, 0), color=PURPLE).shift(.4 * DOWN)
         delx = TexMobject("\\Delta x").scale(.75).next_to(measure_line.get_center(), buff=.2, direction=DOWN)
 
         # n = 2
         iterations = VGroup()
 
-        self.play(AnimationGroup(Write(measure_line), Write(delx), lag_ratio=.5), run_time=2)
+        self.play(Write(number_line[0]))
+        self.play(ApplyMethod(number_line[0].shift, .4 * DOWN))
+        self.play(Write(number_line[1:]))
+        self.wait()
+        self.play(WiggleOutThenIn(measure_line))
+        self.play(Write(delx))
         self.wait()
         self.play(ReplacementTransform(delx, step_text), FadeOut(measure_line))
         self.wait()
@@ -272,6 +283,7 @@ class Simpsons(GraphScene):
                     first_iteration = simps_elements
                     mini_par_graph = parab_approx
                     print(for_later_exp)
+                    self.play(FadeOut(number_line))
 
                 nth_iteration.add(simps_elements)
 
@@ -334,7 +346,7 @@ class Simpsons(GraphScene):
             *[DashedLine(dots[i].get_center(), dots[i + 1].get_center(), stroke_width=1) for i in range(3) if i != 2],
             DashedLine(y1, y3, stroke_width=1)
         )
-        par_n_dots = VGroup(first_iteration[::3], pseudo_dots, lines)
+        par_n_dots = VGroup(first_iteration[::3], pseudo_dots, lines, x_labels)
 
         self.play(FadeIn(first_iteration))
         self.x_axis.save_state()
@@ -412,20 +424,20 @@ class Simpsons(GraphScene):
         self.wait()
         self.play(ReplacementTransform(sum_of_two[2:], eqn_RHS))
         self.wait()
+        self.play(par_n_dots[0].fade, .75)
+        self.wait()
+        self.play(FadeIn(pseudo_arch_tri))
         self.play(
             ReplacementTransform(eqn_RHS, sum_of_3_areas),
             # eqn_RHS[-1].move_to,eqn1_RHS[-2:-1].get_center()
         )
 
-        self.play(par_n_dots[0].fade, .75)
         self.wait()
-        self.play(FadeIn(pseudo_arch_tri))
-        self.wait()
-        self.play(ReplacementTransform(pseudo_arch_tri, trap_group[0]), Indicate(sum_of_3_areas[1]))
+        self.play(FadeIn(trap_group[0]), Indicate(sum_of_3_areas[1]))
         for i, j in zip(range(0, 2), [3, 5]):
             self.play(ReplacementTransform(trap_group[i], trap_group[i + 1]), Indicate(sum_of_3_areas[j]), run_time=2)
             self.wait()
-
+        self.play(FadeOut(pseudo_arch_tri), FadeOut(trap_group[-1]))
         sum_of_3_areas_2 = TexMobject(
             "\\dfrac{1}{3} \\Bigg(",
             "4\\,S_{P_1P_2BA}",
@@ -478,9 +490,9 @@ class Simpsons(GraphScene):
 
         self.play(ReplacementTransform(sum_of_3_areas_3, simpsons_rule[0]))
         self.wait()
-        self.play(FadeOut(par_n_dots), FadeOut(trap_group[-1]), FadeOut(numbered_labels))
+        self.play(FadeOut(par_n_dots), FadeOut(numbered_labels))
         self.play(ReplacementTransform(simpsons_rule[0], simpsons_rule[1]), FadeIn(axes_n_graph))
         self.wait()
         self.play(ReplacementTransform(simpsons_rule[1], simpsons_rule[2]))
         self.wait()
-        self.play(*[FadeOut(mobj) for mobj in self.mobjects])
+        self.play(*[FadeOut(mobj) for mobj in self.mobjects], run_time=5)
