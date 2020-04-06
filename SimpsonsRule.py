@@ -31,14 +31,6 @@ class Simpsons(GraphScene):
 
     }
 
-    def construct(self):
-        self.setup_axes()
-        graph = self.get_graph(lambda t: .05 * t**3 - .45 * t**2 + t + 5)
-        self.add(graph)
-
-
-    }
-
     def get_parabola(self, pt1, pt2, pt3):
         a = np.array([[pt1[0]**2, pt1[0], 1], [pt2[0]**2, pt2[0], 1], [pt3[0]**2, pt3[0], 1]])
         # print(a)
