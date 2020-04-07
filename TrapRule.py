@@ -127,6 +127,7 @@ class TrapRule(GraphScene):
             nth_iteration.add(trap_elements)
 
         last_iteration = False
+        first_iteration = True
         n_list = [2, 1]  # , .5]
         for n in n_list:
             if n == n_list[-1]:
@@ -139,9 +140,12 @@ class TrapRule(GraphScene):
                 show_trap(x_samp)
 
             iterations.add(nth_iteration)
+            if first_iteration:
+                FadeOut(measure_line)
             if not last_iteration:
                 self.play(FadeOut(nth_iteration))
             self.wait()
+            first_iteration = False
             # self.add(parab_approx, dots, line, parab_area)
 
         last_iteration = iterations[-1]
