@@ -18,16 +18,14 @@ class TrapRule(GraphScene):
         "y_bottom_tick": None,  # Change if different from y_min
         "y_labeled_nums": None,
         "y_axis_label": "$y$",
-        "axes_color": GREY,
+        "axes_color": BLACK,
         "graph_origin": 2.5 * DOWN + 4 * LEFT,
         "exclude_zero_label": True,
-        "default_graph_colors": [BLUE, GREEN, YELLOW],
-        "default_derivative_color": GREEN,
-        "default_input_color": YELLOW,
-        "default_riemann_start_color": BLUE,
-        "default_riemann_end_color": GREEN,
         "area_opacity": 0.8,
         "num_rects": 50,
+        "x_axis_label_color": BLACK,
+        "y_axis_label_color": BLACK,
+        "camera_config": {"background_color": WHITE}
 
     }
 
@@ -40,6 +38,8 @@ class TrapRule(GraphScene):
         return x
 
     def construct(self):
+        # self.x_axis.x_label.set_color(BLACK)
+        # self.y_axis.y_label.set_color(BLACK)
 
         def func(t):
             return .05 * t**3 - .55 * t**2 + t + 7
@@ -47,7 +47,7 @@ class TrapRule(GraphScene):
         ctp = self.coords_to_point
         itp = self.input_to_graph_point
 
-        title = TextMobject("Trapezoidal Rule").scale(2)
+        title = TextMobject("Trapezoidal Rule", color=BLACK).scale(2)
         self.play(Write(title))
         self.play(title.to_edge, UP)
         self.play(FadeOut(title))
@@ -66,13 +66,13 @@ class TrapRule(GraphScene):
         ]
         integral.set_points_as_corners(integral_points)
         self.play(FadeIn(integral))
-        area_text = TextMobject("Area = ?").scale(1.5).move_to(integral.get_center() + 2 * DOWN)
+        area_text = TextMobject("Area = ?", color=BLACK).scale(1.5).move_to(integral.get_center() + 2 * DOWN)
         self.play(Write(area_text))
         self.play(FadeOut(area_text), FadeOut(integral))
 
-        step_size = TexMobject("\\Delta x =").to_edge(UP)
-        step = DecimalNumber(2).next_to(step_size)
-        step_text = VGroup(step_size, step).add_background_rectangle()
+        step_size = TexMobject("\\Delta x =", color=BLACK).to_edge(UP)
+        step = DecimalNumber(2, color=BLACK).next_to(step_size)
+        step_text = VGroup(step_size, step)
 
         number_line = VGroup(Line(ctp(0, 0), ctp(self.x_max - 1, 0), color=BLUE))
         tick = Line(.125 * UP, .125 * DOWN, color=BLUE)
@@ -81,7 +81,7 @@ class TrapRule(GraphScene):
             number_line.add(tick_copy)
 
         measure_line = Line(ctp(0, 0), ctp(2, 0), color=PURPLE).shift(.4 * DOWN)
-        delx = TexMobject("\\Delta x").scale(.75).next_to(measure_line.get_center(), buff=.2, direction=DOWN)
+        delx = TexMobject("\\Delta x", color=BLACK).scale(.75).next_to(measure_line.get_center(), buff=.2, direction=DOWN)
 
         # n = 2
 
@@ -106,7 +106,7 @@ class TrapRule(GraphScene):
             two_points = [itp(s, graph) for s in [x_samp, x_samp + n]]
             dots = VGroup()
             for s in two_points:
-                dots.add(Dot(s))
+                dots.add(Dot(s, color=BLACK))
             trapezoid = get_trapezoid(
                 [
                     *two_points,
@@ -118,7 +118,7 @@ class TrapRule(GraphScene):
                 fill_opacity=0.5,
                 stroke_width=0
             )
-            trap_line = Line(dots[0].get_center(), dots[1].get_center())
+            trap_line = Line(dots[0].get_center(), dots[1].get_center(), color=BLACK)
             line = self.get_vertical_line_to_graph(x_samp + n, graph, line_class=DashedLine, color=BLUE)
             self.play(ShowCreation(dots))
             self.play(Write(line), Write(trap_line))
@@ -130,9 +130,11 @@ class TrapRule(GraphScene):
         first_iteration = True
         n_list = [2, 1]  # , .5]
         for n in n_list:
+
             if n == n_list[-1]:
                 last_iteration = True
-            # self.play(step.set_value, n)
+
+            self.play(step.set_value, n)
             x_samps = np.arange(0, 8, n)
             nth_iteration = VGroup()
 
@@ -141,9 +143,13 @@ class TrapRule(GraphScene):
 
             iterations.add(nth_iteration)
             if first_iteration:
-                FadeOut(measure_line)
+                self.play(FadeOut(number_line))
+
             if not last_iteration:
                 self.play(FadeOut(nth_iteration))
+
+            if last_iteration:
+                self.play(FadeOut(step_text))
             self.wait()
             first_iteration = False
             # self.add(parab_approx, dots, line, parab_area)
@@ -166,7 +172,7 @@ class TrapRule(GraphScene):
                 temp_grp.fade(1)
 
         # self.wait(2)
-        trap_formula = TexMobject(
+        trap_formula_crude = TexMobject(
             "=",
             "\\dfrac{y_1+y_2}{2}\\,\\Delta x",
             "+",
@@ -174,11 +180,29 @@ class TrapRule(GraphScene):
             "+",
             "...",
             "\\\\\\,+"
-            "\\dfrac{y_{n-1}+y_{n}}{2}\\,\\Delta x"
+            "\\dfrac{y_{n-1}+y_{n}}{2}\\,\\Delta x",
+            color=BLACK,
         ).next_to(graph_setup).shift(DOWN)
-        self.play(Write(trap_formula[0]))
-        self.play(Write(trap_formula[1:3]), last_iteration[0].restore)
-        self.play(Write(trap_formula[3:5]), last_iteration[1].restore)
-        self.play(Write(trap_formula[5]), temp_grp.restore)
-        self.play(Write(trap_formula[6:]), last_iteration[-1].restore)
+        self.play(Write(trap_formula_crude[0]))
+        self.wait()
+        self.play(AnimationGroup(ApplyMethod(last_iteration[0].restore), Write(trap_formula_crude[1:3]), lag_ratio=.5))
+        self.wait()
+        self.play(AnimationGroup(ApplyMethod(last_iteration[1].restore), Write(trap_formula_crude[3:5]), lag_ratio=.5))
+        self.wait()
+        self.play(AnimationGroup(ApplyMethod(temp_grp.restore), Write(trap_formula_crude[5]), lag_ratio=.5))
+        self.wait()
+        self.play(AnimationGroup(ApplyMethod(last_iteration[-1].restore), Write(trap_formula_crude[6:]), lag_ratio=.5))
         self.wait(2)
+
+        trap_formula = TexMobject(
+            "\\dfrac{\\Delta x}{2}\\,",
+            "\\Big[",
+            "(y_1+y_n)",
+            "+",
+            "2\\,(y_2+y_3+...+y_{n-1})",
+            "\\Big]",
+            color=BLACK,
+        ).scale(.75).next_to(trap_formula_crude[0])
+        self.play(ReplacementTransform(trap_formula_crude[1:], trap_formula))
+        self.wait()
+        self.play(*[FadeOut(mobj) for mobj in self.mobjects], run_time=5)
