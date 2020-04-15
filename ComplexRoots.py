@@ -80,10 +80,6 @@ class CompRoot(GraphScene):
         else:
             w_tracker.scale(0.02, about_point=wpc)
 
-        # self.add(w_tracker)
-        # self.play(z.shift, RIGHT)
-        # self.wait()
-
         def update_w_tracker(w_tracker, dt):
             ztl = z_tracker.get_length()
             new_w_tracker = Line(wpc, wpc + RIGHT, stroke_width=5, color=YELLOW)
@@ -175,21 +171,71 @@ class CompRoot(GraphScene):
 
         self.play(MoveAlongPath(z, path, rate_func=linear), run_time=5)
         self.wait()
-        tempgrp = (z_trace, w_trace, eg[0],)
-        self.play(*[FadeOut(mobj) for mobj in tempgrp], FadeOut(eg[2:]), FadeIn(eqn))
+        tempgrp = VGroup(z_trace, w_trace, eg[0], z_angle, w_angle)  # , z_angle_value, w_angle_value)
+        eqn = TexMobject("z", "\\,\\,=w").next_to(trans, direction=UP, buff=0.1)
+        power = DecimalNumber(w_freq, num_decimal_places=0).scale(.5).next_to(eqn[0], direction=UR, buff=0.05)
+        mapping = VGroup(eqn[0:2], power).scale(.75)
 
-        # self.play(z.move_to)
+        z_angle.clear_updaters()
+        w_angle.clear_updaters()
+        self.play(
+            *[FadeOut(mobj) for mobj in tempgrp], FadeOut(eg[2:]), FadeIn(mapping),
+            *[ApplyMethod(i.scale, 0.000001) for i in [z_angle_value, w_angle_value]]
+        )
+
         ###############################
 
         roots = VGroup()
         dummy = Dot(zpc + RIGHT, fill_opacity=0)
 
+        def kill_dups(roots):
+            dups = []
+            for_check = True
+
+            for i in range(len(roots)):
+                a = roots[i].get_center()
+                nth_dups = []
+                something_happened = False
+                for j in range(len(roots)):
+
+                    if i != j:
+                        if j not in dups:
+                            b = roots[j].get_center()
+                            dist = np.linalg.norm(a - b)
+                            print(f"a is {a}")
+                            print(f"b is {b} and dist is {dist}")
+                            print()
+                            if dist < .5:
+                                # if for_check:
+                                print("##########yes##################")
+                                # print(b)
+                                if i not in dups:
+                                    dups.append(i)
+                                something_happened = True
+                                dups.append(j)
+                    for_check = False
+                if something_happened:
+                    dups.append(1000000)
+
+            print(dups)
+            nth_dups = []
+            mark = 0
+            for index, dup in enumerate(dups):
+                if dup > 10000:
+                    nth_dups.append(list(range(mark, index)))
+                    mark = index
+                    dups.remove(dup)
+            print(nth_dups)
+            new_roots = VGroup()
+            for dup in nth_dups:
+                new_roots.add(roots[dup[0]])
+
+            return new_roots
+
         def update_dummy(dummy, dt):
-            # print(w.get_center()[0] - wpc[0])
-            location = w.get_center()[0] - wpc[0]
-            if location > 0.9999 and location < 1:
-                # print("Yes")
-                mark = Dot(z.get_center(), color=RED)
+            if w_angle_value.get_value() > -0.2 and w_angle_value.get_value() < 0.25:  # or (location > 0.998 and location < 1):  # or (location > 0.997 and location < 1):  # or (location > 0.995 and location < 1):
+                # print(w_angle_value.get_value())
+                mark = Dot(z.get_center(), color=PURPLE)
                 roots.add(mark)
                 dummy.become(mark)
 
@@ -200,31 +246,34 @@ class CompRoot(GraphScene):
         path = Circle().move_to(zpc)
 
         self.play(z.move_to, path.points[0])
+        equals_one = TexMobject("=1", "1")
+        equals_one[0].move_to(eqn[-1]).scale(0.75)
+        equals_one[1].next_to(wpc + RIGHT, direction=UR, buff=0.1)
+
+        self.play(Transform(eqn[1], equals_one[0]), FadeIn(equals_one[1]))
         # self.play(z.shift, UP)
 
-        w_freqs = range(3, 6)
+        w_freqs = range(2, 7)
+        # check = False
         for w_freq in w_freqs:
-            self.play(Indicate(eqn))
+            self.play(Indicate(mapping))
             self.play(power.set_value, w_freq)
-            self.play(MoveAlongPath(z, path, rate_func=linear), run_time=5)
+            self.play(Flash(power))
+            self.play(MoveAlongPath(z, path, rate_func=linear), run_time=10)
             self.wait()
+            # print(len(roots))
+            # for root in roots:
+            # print(root.get_center())
+            # roots = kill_dups(roots)
+            # print(len(roots))
+            # print()
             self.add(roots)
-            self.wait(2)
-            # ngon = VMobject(color=YELLOW).set_points_as_corners([root.get_center() for root in roots])
-            # self.play(ShowCreation(ngon))
+
+            # self.play(Indicate(roots))
             self.wait()
-            self.play(FadeOut(roots))
+            ngon = VMobject(stroke_width=1, color=YELLOW).set_points_as_corners([*[root.get_center() for root in roots], roots[0].get_center()])
+            self.play(ShowCreation(ngon))
+            self.wait()
+            self.play(FadeOut(roots), FadeOut(ngon))
             roots = VGroup()
-
-        """
-        w = Dot(w_tracker.points[-1]).add_updater(lambda x: x.move_to(w_tracker.points[-1]))
-        self.add(z, z_tracker, w_tracker, w)
-        self.play(z.shift, RIGHT)
-        self.wait()
-
-        z_vec, w_vec = Vector(2 * RIGHT).shift(zpc), Vector(2 * RIGHT).shift(wpc)
-        z_vec.add_updater(lambda x, dt: x.rotate(z_freq * dt, about_point=zpc))
-        w_vec.add_updater(lambda x, dt: x.rotate(w_freq * z_freq * dt, about_point=wpc))
-        self.add(z_vec, w_vec)
-        self.wait(3)
-        """
+            # check = True
