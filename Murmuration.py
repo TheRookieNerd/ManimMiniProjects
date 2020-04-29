@@ -4,10 +4,10 @@ from manimlib.imports import *
 
 class Boids(Scene):
     CONFIG = {
-        "stay_away": 1,
+        "stay_away": 0.25,
         "local_rad": 1,
-        "local_v_weight": 10,  # towards local center
-        "common_v_weight": 0.0,  # towards leader
+        "local_v_weight": 1,  # towards local center
+        "common_v_weight": 2.,  # towards leader
         "leader_v_weight": 0.1,
         "push_v_weight": 2,
         "d": 0
@@ -15,7 +15,7 @@ class Boids(Scene):
 
     def construct(self):
         birds = VGroup()
-        total_birds = 20
+        total_birds = 40
         boundary = Rectangle(height=FRAME_HEIGHT, width=FRAME_WIDTH)
         self.add(boundary)
 
@@ -138,7 +138,7 @@ class Boids(Scene):
             # self.add(bird)
 
         self.add(birds)
-        self.wait(10)
+        self.wait(5)
         # print(self.centroid)
         # print(birds[0].get_center())
         # self.wait()
