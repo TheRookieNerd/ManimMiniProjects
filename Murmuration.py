@@ -5,22 +5,24 @@ from manimlib.imports import *
 class Boids(Scene):
     CONFIG = {
         "stay_away": 0.25,
-        "local_rad": 3,
-        "local_v_weight": 4,  # towards local center
-        "common_v_weight": 3.,  # towards leader
-        "leader_v_weight": 2,
-        "push_v_weight": 2,
+        "push_v_weight": 10,
+
+        "local_rad": 1,
+        "local_v_weight": 2,  # towards local center
+        "common_v_weight": 1.,  # towards leader
+        "leader_v_weight": 4,
         "d": 0
     }
 
     def construct(self):
         birds = VGroup()
         total_birds = 120
+        total_groups = 6
         boundary = Rectangle(height=FRAME_HEIGHT, width=FRAME_WIDTH)
         self.add(boundary)
 
         boxes = VGroup()
-        for _, direction in zip(range(6), [UR, DR, UL, DL, 1.5 * RIGHT, 1.5 * LEFT]):
+        for _, direction in zip(range(total_groups), [UR, DR, UL, DL, 1.5 * RIGHT, 1.5 * LEFT]):
             box = Rectangle(height=3, width=4).move_to(2.5 * direction)
             boxes.add(box)
             # self.add(box)
@@ -33,7 +35,7 @@ class Boids(Scene):
                 interpolate(x0, x1, random.random()),
                 interpolate(y0, y1, random.random()),
                 0
-            ]) + box.get_center() for _ in range(int(total_birds / 6))]
+            ]) + box.get_center() for _ in range(int(total_birds / total_groups))]
             for nbp in nth_bird_positions:
                 bird_positions.append(nbp)
 
@@ -43,13 +45,8 @@ class Boids(Scene):
             d += total_birds / len(boxes)
             last_bird_of_nth_group.append(d)
         print(last_bird_of_nth_group)
-        # bird_positions = [np.random.uniform(-FRAME_HEIGHT, 0., size=3) for _ in range(int(total_birds / 2))]
-        # bird_positions2 = [np.random.uniform(0, FRAME_HEIGHT, size=3) for _ in range(int(total_birds / 2))]
-        # for shit in bird_positions2:
-        #     bird_positions.append(shit)
+
         self.previous_bird_positions = bird_positions
-        # self.pseudo_lead_right = RIGHT * 3
-        # self.pseudo_lead_left = LEFT * 3
 
         def check_boundary(mobj):
             if mobj.get_left()[0] < boundary.get_left()[0]:
@@ -66,7 +63,29 @@ class Boids(Scene):
 
         def update_pseudo_lead(leader, dt):
             leader.shift(leader.velocity * dt)
+            # if leader is leaders[0]:
+            # leader.shift(leader.velocity * 20 * dt)
+            # else:
+            #     direc = (leaders[0].get_center() - leader.get_center()) / np.linalg.norm(leaders[0].get_center() - leader.get_center())
+            #     leader.velocity = self.common_v_weight * direc * 2
+            #     leader.shift(leader.velocity * dt)
+
+            # l_positions = []
+            # for plp in self.previous_leader_positions:
+            #     if not np.array_equal(plp, leader.get_center()):
+            #         if np.linalg.norm(plp - leader.get_center()) < (self.local_rad + 0):
+            #             l_positions.append(plp)
+
+            # local_centroid = np.mean(l_positions, axis=0)
+
+            # local_direc = (local_centroid - leader.get_center()) * self.local_v_weight / 100
+            # if leader is not leaders[0]:
+            #     leader.velocity += local_direc
+
             check_boundary(leader)
+
+            if leader is leaders[-1]:
+                self.previous_leader_positions = [l.get_center() for l in leaders]
 
         def get_dist(v1, v2):
             return np.linalg.norm(v1.get_center() - v2.get_center())
@@ -88,7 +107,7 @@ class Boids(Scene):
             exists = False
             for i in range(len(boxes)):
                 if bird_index < last_bird_of_nth_group[i]:
-                    direc = (leaders[i].get_center() - bird.get_center()) / np.linalg.norm(leaders[i].get_center() - bird.get_center())
+                    direc = (leaders[0].get_center() - bird.get_center()) / np.linalg.norm(leaders[0].get_center() - bird.get_center())
                     exists = True
                     break
 
@@ -103,7 +122,6 @@ class Boids(Scene):
             bird.velocity = self.common_v_weight * direc
             lb_positions = []
             for pbp in self.previous_bird_positions:
-
                 if not np.array_equal(pbp, bird.get_center()):
                     if np.linalg.norm(pbp - bird.get_center()) < self.local_rad:
                         lb_positions.append(pbp)
@@ -124,10 +142,13 @@ class Boids(Scene):
         last_bird = Dot(np.random.uniform(-3., -1., size=3), radius=0.05, color=RED)
 
         leaders = VGroup()
-        for i in range(len(boxes)):
-            leader = Dot(boxes[i].get_center())  # , radius=0.001)
-            leader.velocity = rotate_vector(RIGHT, 2 * PI * random.random()) * self.leader_v_weight
+        for i in range(1):
+            random.seed()
+            leader = Dot(boxes[i].get_center(), radius=0.001)
+            # leader.velocity = rotate_vector(RIGHT, 2 * PI * random.random()) * self.leader_v_weight
+            leader.velocity = UR * self.leader_v_weight
             leaders.add(leader)
+        self.previous_leader_positions = [leader.get_center() for leader in leaders]
 
         for leader in leaders:
             leader.add_updater(update_pseudo_lead)
@@ -147,7 +168,7 @@ class Boids(Scene):
             # self.add(bird)
 
         self.add(birds)
-        self.wait(5)
+        self.wait(15)
         # print(self.pseudo_lead_right)
         # print(birds[0].get_center())
         # self.wait()
