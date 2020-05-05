@@ -9,7 +9,7 @@ class Boids(Scene):
 
         "local_rad": 1,
         "local_v_weight": 2,  # towards local center
-        "common_v_weight": 1.,  # towards leader
+        "common_v_weight": 4.,  # towards leader
         "leader_v_weight": 4,
         "d": 0
     }
