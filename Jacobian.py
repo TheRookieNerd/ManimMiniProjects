@@ -1,6 +1,3 @@
-from manimlib.imports import *
-
-
 class Jacobian(MovingCameraScene):
     def get_transposed_matrix_transformation(self, transposed_matrix):
         transposed_matrix = np.array(transposed_matrix)
@@ -12,9 +9,9 @@ class Jacobian(MovingCameraScene):
             raise Exception("Matrix has bad dimensions")
         return lambda point: np.dot(point, transposed_matrix)
 
-    def get_piece_movement(self, poles):
-        start = VGroup(*poles)
-        target = VGroup(*[mob.target for mob in poles])
+    def get_piece_movement(self, pieces):
+        start = VGroup(*pieces)
+        target = VGroup(*[mob.target for mob in pieces])
         return Transform(start, target, lag_ratio=0)
 
     def get_vector_movement(self, func):
