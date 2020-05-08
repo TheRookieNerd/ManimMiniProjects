@@ -9,7 +9,7 @@ class Series(Scene):
     }
 
     def construct(self):
-        a = 5
+        a = 12
         iterations = 50
         formula = TexMobject(
             "(1-x) \\mathbf{.} 1",
@@ -17,13 +17,17 @@ class Series(Scene):
             "+ (1-x)\\mathbf{.} \\, x^2",
             "+... \\,",
             " = \\, 1"
-        ).to_edge(UP)
+        ).scale(1.25).shift((FRAME_HEIGHT - 1) * UP)
         unit_sq = Square(side_length=a, **self.rect_kwargs)
-        self.add(unit_sq)
+        one = TexMobject("1", "1").scale(1.5)
+        one[0].next_to(unit_sq, direction=UP)
+        one[1].next_to(unit_sq)
+        self.play(ShowCreation(unit_sq), Write(one))
+        self.play(FadeOut(one))
         # box = unit_sq.copy()
         x_text = TexMobject("x = ")
         x_obj = DecimalNumber(.5)
-        x_grp = VGroup(x_text, x_obj).arrange_submobjects(direction=RIGHT).to_edge(DOWN, buff=0.1)
+        x_grp = VGroup(x_text, x_obj).arrange_submobjects(direction=RIGHT).scale(2).shift((FRAME_HEIGHT - 1) * DOWN)
         self.play(Write(x_grp))
         self.x = x_obj.get_value()
 
@@ -61,9 +65,9 @@ class Series(Scene):
             self.add(box_group[-1])
             if i < 3:
                 if i != 0:
-                    temp = formula[i][1:].copy().scale(1 / (1 * i)).move_to(temp_box)
+                    temp = formula[i][1:].copy().scale(1 / (0.5 * i)).move_to(temp_box)
                 else:
-                    temp = formula[i].copy().move_to(temp_box)
+                    temp = formula[i].copy().scale(1.5).move_to(temp_box)
                 self.play(Write(formula[i]))
 
                 self.play(temp_box.set_fill, {"color": RED, "opacity": 0.75})
@@ -86,4 +90,4 @@ class Series(Scene):
 
         x_obj.add_updater(update_x_obj)
         self.add(x_obj)
-        self.wait(7)
+        self.wait(10)
