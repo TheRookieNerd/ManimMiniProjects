@@ -13,6 +13,7 @@ class Fractal(MovingCameraScene):
     }
 
     def construct(self):
+        self.pseudo_one = 1
         tri = Triangle(**self.tri_config)
         self.camera_frame.scale(0.5)
         self.add(tri)
@@ -20,17 +21,21 @@ class Fractal(MovingCameraScene):
         tri.vertices.append(tri.get_vertices()[0])
 
         nth_it = tri
-        for _ in range(9):
+        for _ in range(20):
             temp = VGroup()
             for t in nth_it:
                 temp.add(*self.cut_tri(t))
+
+            for red in temp:
+                if not self.check_in_frame(red):
+                    temp.remove(red)
 
             nth_it = temp
             # self.play(ShowCreation(nth_it))
             # self.add(nth_it)
             if _ % 1 == 0:
                 self.play(self.camera_frame.scale, 0.65, self.camera_frame.move_to, ORIGIN)
-                # self.play()
+                self.pseudo_one *= 0.65
             self.play(*[ShowCreation(i) for i in nth_it])
 
     def cut_tri(self, tri):
@@ -60,3 +65,18 @@ class Fractal(MovingCameraScene):
                 slices.add(cut)
 
         return slices
+
+    def check_in_frame(self, tri):
+        # self.pseudo_one = self.one*0.65
+        edge_x = (self.camera_frame.height / 2 * self.pseudo_one) + self.pseudo_one / 2
+        edge_y = (self.camera_frame.width / 2 * self.pseudo_one) + self.pseudo_one / 2
+        # print(edge_x, edge_y)
+        # edge = frame.get_frame_height()
+        center = tri.get_center()
+        if center[0] > edge_x or center[0] < -edge_x:
+            return False
+
+        elif center[1] > edge_y or center[1] < -edge_y:
+            return False
+        else:
+            return True
