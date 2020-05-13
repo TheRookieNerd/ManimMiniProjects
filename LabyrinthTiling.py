@@ -21,10 +21,11 @@ class Fractal(MovingCameraScene):
         tri.vertices.append(tri.get_vertices()[0])
 
         nth_it = tri
-        for _ in range(20):
+        for _ in range(10):
             temp = VGroup()
             for t in nth_it:
-                temp.add(*self.cut_tri(t))
+                if self.check_in_frame(t):
+                    temp.add(*self.cut_tri(t))
 
             for red in temp:
                 if not self.check_in_frame(red):
